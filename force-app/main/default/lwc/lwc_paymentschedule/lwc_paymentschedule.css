@@ -1,0 +1,128 @@
+.card {
+    max-width: 97vw;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    /* overflow: auto; */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    /* transition: transform 0.3s; */
+    margin: 20px auto;
+    /* z-index: -10000;*/
+} 
+
+.custom-date-input ::part(calendar) {
+    width: 100px; /* Adjust the width as needed */
+    height: 100px;
+}
+
+.custom-date-input ::part(date) {
+    width: auto; /* Adjust the width as needed */
+}
+
+/* .card:hover {
+    transform: scale(1.02);
+} */
+
+.card-header {
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.fixed-size-input {
+    width: calc(50% - 5px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.date-input {
+    z-index: 2;
+    position: relative; /* Set position to relative */
+}
+
+.card-content {
+    padding: 10px;
+}
+
+.input-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.input-container {
+    flex: 1;
+    margin-right: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.card-footer {
+    padding: 16px;
+    text-align: right;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.trclass {
+    background-color:  rgb(88, 249, 246);
+    /* box-shadow: rgba(25, 120, 229, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px; */
+}
+
+/* customHeader.css */
+.custom-header {
+    background-color: #8fc9f0; /* Header background color */
+    color: #ffffff; /* Text color */
+    padding: 15px; /* Padding for content */
+    /* text-align: center; Center-align text */
+}
+
+h1 {
+    font-size: 2em; /* Adjust font size as needed */
+    margin: 0; /* Remove default margin for h1 */
+}
+
+h2 {
+    font-size: 1.5em; /* Adjust font size as needed */
+    margin: 10px 0; /* Add margin to the paragraph */
+}
+.custom-tableheader {
+    height: 60px;
+    background-color: #8fc9f0; /* Header background color */
+    color: #ffffff; /* Text color */
+    padding: 15px; /* Padding for content */
+    margin-left: 2px;
+    margin-right: 2px;
+}

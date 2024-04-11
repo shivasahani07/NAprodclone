@@ -1,0 +1,20 @@
+<apex:page standardController="Paybale__c" recordSetVar="Paybale__c" extensions="PayblesController" >
+    <apex:includeLightning />
+    <div id="lightning"> </div>
+    <script>
+        debugger;
+        var recordata = '{!$CurrentPage.parameters.Id}';
+    	var financialAccId = '{!financialAccountId}';
+    
+        $Lightning.use(
+            "c:LWC_MEMO_CREATION",
+            function(){
+                $Lightning.createComponent(
+                    "c:lwc_PayableMemoCreation",
+                    {recordId: financialAccId},
+                    "lightning"
+                );
+            }
+        );
+    </script>
+</apex:page>

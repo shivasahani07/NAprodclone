@@ -1,0 +1,36 @@
+.search-section {
+    background: white;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.lightning-input {
+    width: 100%;
+}
+
+.custom-spinner-container {
+	position: relative;
+    min-height: 5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.custom-spinner-container .slds-spinner_container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.custom-spinner-container .slds-is-absolute {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.875rem;
+    color: var(--lwc-colorTextDefault);
+}

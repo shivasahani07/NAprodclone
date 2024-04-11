@@ -1,0 +1,52 @@
+<template>
+    <div class="card">
+		<lightning-spinner if:true={isSpinner} variant="brand" size="large"> </lightning-spinner>
+		<div class="custom-header">
+			<h1>Add Recalibration</h1>
+		</div>
+
+        <div class="card-content">
+			<div class="slds-grid slds-gutters slds-wrap">
+				<div class="slds-p-around_xxx-small slds-col slds-size_12-of-12">
+					<span>
+						<div class="slds-grid slds-gutters slds-wrap">
+                            <div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+                                <span>
+									<lightning-input title="Model Recalibration Price" required="true"
+										disabled="true" name="mrp" type="text"
+										value={accountName} label="Account"></lightning-input>
+                                </span>
+
+                            </div>
+							
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-input title="Model Recalibration Price" required="true"
+										disabled={paymentschedule.reccalprice} name="mrp" type="number"
+										value={paymentschedule.Model_Recalibration_Price__c} label="Model Recalibration Price"
+										class="custom-date-input" onchange={psfieldChangeHandler}></lightning-input>
+                                </span>
+                            </div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-input title="New Recalibration Price" required="true"
+										disabled={paymentschedule.newrecalprice} name="nrp" type="number"
+										value={paymentschedule.New_Recalibration_Price__c} label="New Recalibration Price"
+										class="custom-date-input" onchange={psfieldChangeHandler}></lightning-input>
+                                </span>
+                            </div>
+                            <div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+                                    
+                                </span>
+                            </div>
+                        </div>
+                    </span>
+                </div>
+            </div>
+        </div>
+                                
+        
+    </div>
+    
+</template>

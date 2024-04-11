@@ -1,0 +1,19 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" >
+	<aura:method name="callChildAuraMethod" action="{!c.calllwcstatucClosedMethod}" />
+    <!-- aura:handler name="init" value="{!this}" action="{!c.doInit}" / -->
+    <aura:attribute name="recordId" type="Id" />
+    <aura:attribute name="financialAccountId" type="Id" default="a05Bl000002hlovIAA" />
+    <aura:attribute name="initFunctionality" type="boolean" default="true" />
+    <aura:attribute name="componentIndex" type="Integer" />
+    <aura:attribute name="CompName" type="List" />
+    <aura:attribute name="payAblesList" type="List" />
+    <aura:attribute name="finalData" type="List" />
+    
+    <aura:attribute name="Isclose" type="Boolean" default="false"/>
+    <aura:attribute name="Index" type="Integer" default="0"/>
+    <aura:attribute name="IsEdit" type="boolean" />
+    <aura:attribute name="Islaunched" type="boolean" />
+    <aura:registerEvent name="compEvent" type="c:compEvent"/>
+
+    <c:lwc_recalibration onlwceventrecalibration="{!c.handleLWCLaunched}" Index="{!v.Index}" Isclose="{!v.Isclose}" IsEdit="{!v.IsEdit}" recId="{!v.recordId}" aura:id="lwc_recalibration"></c:lwc_recalibration>
+</aura:component>

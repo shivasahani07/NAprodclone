@@ -1,0 +1,245 @@
+<template>
+
+	<div class="card">
+		<lightning-spinner if:true={isSpinner} variant="brand" size="large"> </lightning-spinner>
+		<div class="custom-header">
+			<h1>Payment Schedule</h1>
+			<h2>Account Name : {accountName}</h2>
+		</div>
+
+		<div class="card-content">
+			<div class="slds-grid slds-gutters slds-wrap">
+				<div class="slds-p-around_xxx-small slds-col slds-size_12-of-12">
+					<span>
+						<div class="slds-grid slds-gutters slds-wrap">
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-input title="Validity Start Date Purpose" required="true"
+										disabled={paymentschedule.disableVSD} name="vsd" type="Date"
+										value={paymentschedule.validity_start_Date__c} label="Validity Start Date"
+										class="custom-date-input" onchange={psfieldChangeHandler}></lightning-input>
+								</span>
+							</div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-input required="true" disabled={paymentschedule.disableVED} name="ved" type="Date"
+										value={paymentschedule.validity_End_Date__c} label="Validity End Date"
+										onchange={psfieldChangeHandler}></lightning-input>
+								</span>
+							</div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+							</div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+							</div>
+						</div>
+
+					</span>
+				</div>
+				<div class="slds-p-around_xxx-small slds-col slds-size_12-of-12">
+					<span>
+						<div class="slds-grid slds-gutters slds-wrap">
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-input disabled={paymentschedule.disableMBP} name="MBP" type="number" step="0.01"
+										value={paymentschedule.Model_Build_Price__c} onchange={psfieldChangeHandler}
+										label="Model Build Price"></lightning-input>
+								</span>
+							</div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-input disabled={paymentschedule.disableMRP} name="MRP" type="number" step="0.01"
+										value={paymentschedule.Model_Recalibration_Price__c} onchange={psfieldChangeHandler}
+										label="Model Recalibration Price"></lightning-input>
+								</span>
+							</div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-combobox required="true" disabled={paymentschedule.disableBF} name="billfreq"
+										label="Billing Frequency" value={paymentschedule.Billing_Frequency__c} placeholder="Select"
+										options={billfrequencylist} onchange={psfieldChangeHandler}>
+									</lightning-combobox>
+								</span>
+							</div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12"></div>
+						</div>
+					</span>
+				</div>
+				<div class="slds-p-around_xxx-small slds-col slds-size_12-of-12">
+					<span>
+						<div class="slds-grid slds-gutters slds-wrap">
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-input disabled={paymentschedule.disableFP} name="floorprice" type="number" step="0.01"
+										value={paymentschedule.Floor_Price__c} label="Floor Price" class="custom-date-input"
+										onchange={psfieldChangeHandler}></lightning-input>
+								</span>
+							</div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-combobox required={paymentschedule.mandFper} name="floorper"
+										disabled={paymentschedule.disableFper} label="Floor Period"
+										value={paymentschedule.Floor_Period__c} placeholder="Select" options={billfrequencylist}
+										onchange={psfieldChangeHandler}>
+									</lightning-combobox>
+								</span>
+							</div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-input disabled={paymentschedule.disableCP} name="ceilingprice" type="number" step="0.01"
+										value={paymentschedule.Ceiling_Price__c} label="Ceiling Price"
+										onchange={psfieldChangeHandler}></lightning-input>
+								</span>
+							</div>
+							<div class="slds-p-around_xxx-small slds-col slds-size_3-of-12">
+								<span>
+									<lightning-combobox name="ceilper"  disabled={paymentschedule.disableCper} required={paymentschedule.mandCper} label="Ceiling Period"
+										value={paymentschedule.Ceiling_Period__c} placeholder="Select" options={billfrequencylist}
+										onchange={psfieldChangeHandler}>
+									</lightning-combobox>
+								</span>
+							</div>
+						</div>
+					</span>
+				</div>			
+					
+				
+			</div>
+
+		</div>
+		<div class="card-footer">
+			
+		</div>
+		<template lwc:if={ShowPsTable}>
+			<!-- <lightning-card title="Price Structure Reset Frequency"> -->
+			<div class="custom-tableheader slds-grid slds-gutters slds-wrap">
+				<div class="slds-p-around_xxx-small slds-col slds-size_6-of-8">
+					<h1>Price Structure Reset Frequency</h1>
+				</div>
+				<div class="slds-p-around_xxx-small slds-col slds-size_2-of-8">
+					<lightning-button-icon disabled={disableaddbtn} class="slds-float--right" icon-name="action:new"
+						onclick={handleAddRow}>
+					</lightning-button-icon>
+				</div>
+
+			</div>
+
+			<table class="slds-table slds-table_cell-buffer slds-table_bordered"
+				aria-labelledby="element-with-table-label other-element-with-table-label">
+				<thead>
+					<tr class="slds-line-height_reset">
+						<!-- <th class="" scope="col">
+										<div class="slds-truncate" title="SR NO.">SR No.</div>
+									</th> -->
+						<th class="" scope="col">
+							<div class="slds-truncate" title="Entity Type">Type</div>
+						</th>
+						<th class="" scope="col">
+							<div class="slds-truncate" title="Entity Type">Reset Frequency</div>
+						</th>
+						<th class="" scope="col">
+							<div class="slds-truncate" title="Entity Type">Rate</div>
+						</th>
+						<th class="" scope="col">
+							<div class="slds-truncate" title="Entity Type">Start Value</div>
+						</th>
+						<th class="" scope="col">
+							<div class="slds-truncate" title="Entity Type">End Value</div>
+						</th>
+						<th class="" scope="col">
+							<div class="slds-truncate" title="Entity Type">Action</div>
+						</th>
+					</tr>
+				</thead>
+				<!-- key={psobj} class={psobj.cssClass} -->
+				<tbody>
+					<template for:each={PriceStructLIst} for:item="psobj" for:index="index">
+						<!-- <div key={psobj} class={psobj.cssClass}> -->
+						<tr key={psobj} class={psobj.cssClass}>
+							<td>
+								<template lwc:if={psobj.showpstype}>
+									<lightning-combobox data-rowindex={index} disabled={psobj.disablepstype}
+										name="pstype" variant="label-hidden" value={psobj.Price_Structure_Type__c}
+										placeholder="Select" options={psobj.PriceStructureTypelist}
+										onchange={pstablefieldChangeHandler}>
+									</lightning-combobox>
+
+								</template>
+
+							</td>
+							<td>
+								<template lwc:if={psobj.showpsresetFeq}>
+									<lightning-combobox data-rowindex={index} disabled={psobj.disablePsResetFreq}
+										name="psresetfreq" variant="label-hidden"
+										value={psobj.Price_Structure_Reset_Frequency__c} placeholder="Select"
+										options={psobj.PriceStructureResetFreqList}
+										onchange={pstablefieldChangeHandler}>
+									</lightning-combobox>
+
+								</template>
+
+							</td>
+							<td>
+								<lightning-input data-rowindex={index} name="psrate" type="number" step="0.01"
+									disabled={psobj.disableRate} value={psobj.Rate__c} variant="label-hidden"
+									onchange={pstablefieldChangeHandler}></lightning-input>
+							</td>
+							<td>
+								<lightning-input disabled={psobj.disablestartval} data-rowindex={index}
+									name="psStarteVal" type="number" value={psobj.Start_Value__c} variant="label-hidden"
+									onchange={pstablefieldChangeHandler}></lightning-input>
+							</td>
+							<td>
+								<template lwc:if={psobj.shownumbervalue}>
+									<lightning-input disabled={psobj.disableendval} data-rowindex={index}
+										name="psEndVal" type="number" value={psobj.End_Value__c} placeholder="Max Value"
+										variant="label-hidden" onchange={pstablefieldChangeHandler}>
+									</lightning-input>
+
+								</template>
+								<template lwc:if={psobj.showtextvalue}>
+									<lightning-input disabled={psobj.disableendval} variant="label-hidden"
+										value="Max Value" label="" name="username" title="Enter your username"
+										placeholder="Max Value">
+									</lightning-input>
+								</template>
+
+
+							</td>
+							<td>
+								<!--template lwc:if={psobj.showAddSlabBtn}>
+											<lightning-button-icon data-rowindex={index} class="slds-floatright"
+												icon-name="action:new" onclick={handleAddSlabRow}>
+											</lightning-button-icon>
+										</template -->
+
+								<template lwc:if={psobj.showRemoveSlabRowBtn}>
+
+									<lightning-button-icon disabled={psobj.disableRemoveSlabbtn} data-rowindex={index}
+										class="slds-float--right" icon-name="action:delete"
+										onclick={handleSlabRemoveRow}>
+									</lightning-button-icon>
+								</template>
+								<template lwc:if={psobj.showRemoveRowBtn}>
+									<lightning-button-icon disabled={psobj.disableRemovebtn} data-rowindex={index}
+										class="slds-float--right" icon-name="action:delete"
+										onclick={handleRemoveRow}></lightning-button-icon>
+								</template>
+
+							</td>
+						</tr>
+
+						<!-- </div> -->
+
+					</template>
+				</tbody>
+			</table>
+			<div class="card-footer">
+				<!-- lightning-button disabled={disablesubmitPriceStructurebtn} class="slds-m-left_x-small button"
+						variant="brand" label="Submit" title="Primary action" onclick={SubmitpsResetFreqRecord}>
+					</lightning-button -->
+			</div>
+			<!-- </lightning-card> -->
+		</template>
+	</div>
+
+</template>

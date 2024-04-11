@@ -1,0 +1,88 @@
+<apex:page showHeader="true" sidebar="true" standardStylesheets="true">
+    <apex:includeLightning />
+    
+    <!-- Custom Styles for Toast Messages -->
+    <style>
+        .custom-toast {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        background: white;
+        border: 1px solid #ddd;
+        padding: 1rem;
+        border-radius: .25rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, .1);
+        z-index: 10000;
+        display: none;
+        }
+        .success { border-left: 5px solid green; }
+        .error { border-left: 5px solid red; }
+        .warning { border-left: 5px solid orange; }
+    </style>
+    
+    <div id="lightning" />
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="custom-toast"></div>
+    
+    <script>
+    function showToast(title, message, variant) {
+        var toastContainer = document.getElementById('toast-container');
+        toastContainer.innerText = title + ': ' + message;
+        toastContainer.className = 'custom-toast ' + variant;
+        toastContainer.style.display = 'block';
+        
+        setTimeout(function() {
+            toastContainer.style.display = 'none';
+        }, 3000);
+    }
+    
+    
+    $Lightning.use("c:LWC_searchAccountByNameOrCIN_APP", function() {
+        $Lightning.createComponent(
+            "c:lWC_search_AccountbyNameOrCIN",
+            {},
+            "lightning",
+            function(cmp) {
+                console.log("Component created successfully!");
+                
+                // Event Listener for Custom Toast Events from LWC
+                document.addEventListener('lwcCustomToastEvent', function(e) {
+                    debugger;
+                    var detail = e.detail;
+                    if (detail.message.includes(':')) {
+                        var splitList = detail.message.split(':');
+                        showToast(detail.title, splitList[0], detail.variant);
+                        if(splitList[1] != null && splitList[1] != undefined){
+                            console.log('splitList[1]', splitList[1].replace(/^\s+|\s+$/gm,''));
+                            var customLabel = "{!$Label.narcbaseurl}";
+                            var redirecturl = customLabel + 'lightning/r/Account/'+splitList[1].replace(/^\s+|\s+$/gm,'')+'/view';
+                            sforce.one.navigateToURL(redirecturl);
+                        }
+                    }
+                    else{
+                        showToast(detail.title, detail.message, detail.variant);
+                    }
+                    
+                });
+                
+                /*document.querySelector('c-l-w-c-search-accountby-name-or-c-i-n').addEventListener('onSave', function (event) {
+                                               cancel();
+                                           });*/
+                
+                document.addEventListener('canceldata', function(e) {
+                    debugger;
+                    var detail = e.detail;
+                    console.log('detail.message :', detail.message);
+                    if (detail.message != null) {
+                        sforce.one.navigateToURL(detail.message);
+                    }
+                    else{
+                        showToast(detail.title, detail.message, detail.variant);
+                    }
+                });
+            }
+        );
+    });
+    </script>
+</apex:page>
