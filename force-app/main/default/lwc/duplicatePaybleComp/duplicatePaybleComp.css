@@ -6,56 +6,58 @@
 	display: none;
  }
 
- .slds-popover.slds-nubbin_left{
-    position: absolute;
-    left:0rem;
-    top:-1.3rem;
-}
-.modalclass {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 100%;
-    transform: translateX(10px);
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 10px;
-}
 
-.slds-nubbin_top-left {
-    position: absolute;
-    top: 200px; /* Adjust this value based on your design */
-    right: 200px; /* Adjust this value based on your design */
-    width: 200px;  /*  Adjust this value based on your design */
-    /* height: 20px;  Adjust this value based on your design */
-    background-color: #fff; /* Match background color of modal */
-    /* transform: rotate(45deg); */
-    z-index: 9001; /* Ensure nubbin is below modal content */
-    border-right: 1px solid #d3d4de; /* Match modal border */
-    border-top: 1px solid #d3d4de; /* Match modal border */
-}
-
-.exampleHolder{
-    position: relative;
-    display: inline-block;
-    width: 80px;
-    height: 80px;
-}
 
 .slds-backdrop{
-	opacity: 0.3;
-  position: absolute; 
-  left: 0px; 
-  right: 0px; 
-  bottom: 0; 
-  top: 10px; 
-  width: 100%; 
-  height: auto; 
-  z-index: 999;
-  backdrop-filter: blur(15px);
+
+}
+
+.slds-modal_large{
+ height:400px;
 }
 
 
-.flex-container {
+/* .flex-container {
     --slds-dropdown-combobox_container-min-width: 300px;
+} */
+
+.slds-input {
+    width: fit-content;
+}
+
+.fullWidth{
+  width: 100% !important;
+}
+
+.slds-scrollable_x {
+  position: relative;
+  top: 0;
+  right: 0;
+  overflow: relative;
+  width:100%;
+
+}
+
+.card_main {
+    display: flex;
+}
+
+.details_card {
+    flex: 1;
+    height:9rem;
+    font-weight:600;
+   background-color:#f3f3f3;
+   box-shadow: 10px 10px 5px f3f3f3;
+    
+}
+
+.details_card b {
+    color:#318CE7;
+    font-size:larger;
+    font-weight: bold;
+}
+
+.details_card b {
+    color:#318CE7;
+    font-size:larger;
 }

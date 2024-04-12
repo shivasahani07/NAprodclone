@@ -43,14 +43,18 @@ public without sharing class PayableDetailsController{
         set<string> l_entitytypeBT	 = new set<string> (label.MemoCreatione_EntityType_BT_Eligible.split(','));
         set<string> l_entitytypeDebt	 = new set<string> (label.MemoCreatione_EntityType_Debt_Eligible.split(','));
         boolean BTpayment = false;
+        boolean IsBTCase = false;
+        boolean HasBTEntity = false;
         
         for (Financial_Entity__c FE : FEntityDetails){
             if ( FE.Financial_Account__r.Amount_Available_For_Disbursement__c > 0)
             {
                 If (l_loanCategory.contains(FE.Financial_Account__r.Loan_Category__c))
                 {
+                    IsBTCase = true;
                     IF(l_entitytypeBT.contains(FE.Entity_Type__c))
                     {
+                        HasBTEntity = true;
                         if (FE.Amount_Disbursed__c < FE.Amount_To_Be_Disbursed__c)
                         {
                             ReturnFEntityDetailsBT.add(FE);
@@ -85,6 +89,10 @@ public without sharing class PayableDetailsController{
                         ReturnFEntityDetails.add(FE);
                     } 
                 }
+            }
+            if (IsBTCase == true && HasBTEntity == false)
+            {
+                ReturnFEntityDetails.Clear();
             }
             /*if (FE.Amount_To_Be_Disbursed__c == null && ReturnFEntityDetails.size() == 0){
 ReturnFEntityDetailsFI.add(FE);

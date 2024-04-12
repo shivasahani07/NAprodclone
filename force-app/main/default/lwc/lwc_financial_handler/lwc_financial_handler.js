@@ -12,6 +12,7 @@ import upsertSObject from "@salesforce/apex/PayableDetailsController.uppesertSob
 import dynamicRecordDeletion from "@salesforce/apex/DynamicRecordDeletion.deleteRecords";
 import createTask from "@salesforce/apex/PayableDetailsController.createTask";
 import getIFSCDetails from "@salesforce/apex/IFSCService.getIFSCDetails";
+import Financial_Entity_Disburse_Amount_Validation from '@salesforce/label/c.Financial_Entity_Disburse_Amount_Validation';
 import {
     refreshApex
 } from '@salesforce/apex';
@@ -19,14 +20,12 @@ import createAccountContactDetailsOnBehalofPayeeNumber from "@salesforce/apex/Pa
 import {
     ShowToastEvent
 } from "lightning/platformShowToastEvent";
-import LightningConfirm from 'lightning/confirm';
-// jest.mock('lightning/confirm');
 
 export default class Lwc_financial_handler extends LightningElement {
     @api financialAccoundId;
     @api recordType;
     @api currentPayeId;
-    @api taskId = "122212";
+    @api taskId = "00TBl000002NKWSMA4";
     @track payeeList = [];
     @track payeeAcdetailsList = [];
     @track EntityTypePicklist;
@@ -144,10 +143,13 @@ export default class Lwc_financial_handler extends LightningElement {
                 disbursedAmount: entity.Amount_Disbursed__c,
                 toBeDisbursedAmount: entity.Amount_To_Be_Disbursed__c,
                 isEditable: false,
-                isEditableDisabled: entity.Task_ID__c === this.taskId,
+                isEditableDisabled:true,
                 isDisabledDeleteButton: true,
                 isEditbleButtonOn: entity.Task_ID__c !== this.taskId,
-                // isShowEditButton:entity.Task_ID__c === this.taskId,
+                Account_Name__c:account.Id,
+                isShowEditableButton:true,
+                isShowEditableButtonDisabled:entity.Task_ID__c !== this.taskId
+                
             };
         });
         this.AddNewPayeeRowDisable = false;
@@ -159,12 +161,10 @@ export default class Lwc_financial_handler extends LightningElement {
         let newExixtingPayeeAC = EntityACDetailsList.map((detail, i) => {
             const account = detail.Financial_Entity__r || {};
             const isPhysicallyVerificationRequired =
-                detail.Verification_Status__c === "Failed";
+                detail.Verification_Status__c === "Failed" ||!detail.Bank_Account_Number__c;
             const isShowViewDocument = detail.Verification_Status__c == "Verified";
             const isSendableForPennyDropVerification =
-                detail.Verification_Status__c === "New";
-
-
+                detail.Verification_Status__c === "New" && detail.Bank_Account_Number__c;
             return {
                 id: detail.Id,
                 index: i,
@@ -182,11 +182,12 @@ export default class Lwc_financial_handler extends LightningElement {
                 Task_ID__c: detail.Task_ID__c,
                 isEditable: detail.Task_ID__c === this.taskId,
                 isEditableDisabled: true,
+                isDisabledAccountVerifyType:detail.Task_ID__c === this.taskId,
                 isEditbleButtonOn: detail.Task_ID__c !== this.taskId,
                 isDisabledVerifyButton: true,
                 isPhysicallyVerificationRequired: false,
                 isShowPhycalyVerifyButton: false,
-                bankAccountName: detail.Banking_Account_Name__c,
+                bankAccountName: detail.Name,
                 isDisabledDeleteButton: true,
                 isPhysicallyVerificationRequiredDisabled: !isPhysicallyVerificationRequired,
                 isSendableForPennyDropVerification: isSendableForPennyDropVerification,
@@ -212,6 +213,16 @@ export default class Lwc_financial_handler extends LightningElement {
             this.isShowPayeeACdetailComp = true;
         }
     }
+
+    editPayeeButton(event){
+        debugger
+        let currentIndex = event.target.dataset.index;
+        let inputValue = event.target.value;
+        let eventName = event.target.name;
+        this.enabledEditingPayee(currentIndex);
+
+    }
+   
 
     handleInputChange(event) {
         debugger;
@@ -265,8 +276,8 @@ export default class Lwc_financial_handler extends LightningElement {
         debugger;
         let currentIndex = event.target.dataset.index;
         let inputValue = event.target.value;
-        this.payeeAcdetailsList[parseInt(currentIndex)].verificationType =
-            inputValue;
+        this.payeeAcdetailsList[parseInt(currentIndex)].verificationType =inputValue;
+        
     }
 
     checkCompoLevelDuplicaton(currentValue, dataList, field) {
@@ -321,7 +332,8 @@ export default class Lwc_financial_handler extends LightningElement {
             toBeDisbursedAmount: "",
             isDisabledDeleteButton: false,
             Financial_Account__c: this.financialAccoundId,
-            Task_ID__c: this.taskId
+            Task_ID__c: this.taskId,
+            Account_Name__c:'',
         };
         tempPayeeObjectList = [...this.payeeList, tempPayeeObject];
         this.payeeList = tempPayeeObjectList;
@@ -355,9 +367,11 @@ export default class Lwc_financial_handler extends LightningElement {
             isDisabledVerifyButton: true,
             isDisabledPayeeNameEdit: true,
             isShowUpdateGreenButton: true,
+            isDisabledAccountVerifyType:true,
             isRedRow: 'green',
             Bank_AccountTypePicklist:this.accountTypePicklist,
             Bank_Account_Type__c:'',
+            bankAccountName:'',
         };
         temppayeeAcdetailObjectList = [
             ...this.payeeAcdetailsList,
@@ -409,6 +423,7 @@ export default class Lwc_financial_handler extends LightningElement {
                     this.payeeList[parseInt(checkedRecordIndex)].name = response.existingAccount[0].Name;
                     this.payeeList[parseInt(checkedRecordIndex)].phone = response.existingAccount[0].Phone;
                     this.payeeList[parseInt(checkedRecordIndex)].email = response.existingAccount[0].Email_Id__c;
+                    this.payeeList[parseInt(checkedRecordIndex)].Account_Name__c = response.existingAccount[0].Id;
 
                 } else {}
             })
@@ -458,7 +473,38 @@ export default class Lwc_financial_handler extends LightningElement {
             this.showPhysicalVerifyButton(event);
         } else if (eventName == "selectPayeeEdit") {
             this.selectAcPayeeNameHandlerEditable(event);
+        }else if(eventName=='backAccountType'){
+            this.selectBackAccountTypeChangeHandler(event);
+        }else if(eventName=='bankAccountName'){
+            this.selectBackAccountNameChangeHandler(event);
         }
+    }
+
+
+    selectBackAccountNameChangeHandler(event){
+      debugger;
+      let currentIndex = event.target.dataset.index;
+      let eventName = event.target.name;
+      let inputValue = event.target.value;
+      let isChecked = event.target.checked;
+      this.payeeAcdetailsList[parseInt(currentIndex)].bankAccountName = inputValue;
+      this.payeeAcdetailsList[parseInt(currentIndex)].Name = inputValue;
+
+    }
+
+    selectBackAccountTypeChangeHandler(event){
+      debugger;
+      let currentIndex = event.target.dataset.index;
+      let eventName = event.target.name;
+      let inputValue = event.target.value;
+      let isChecked = event.target.checked;
+      this.payeeAcdetailsList[parseInt(currentIndex)].Bank_Account_Type__c = inputValue;
+      if(!this.payeeAcdetailsList[parseInt(currentIndex)].bankNumber){
+          this.payeeAcdetailsList[parseInt(currentIndex)].isDisabledAccountVerifyType =true;
+      }else{
+          this.payeeAcdetailsList[parseInt(currentIndex)].isDisabledAccountVerifyType = false;
+      }
+
     }
 
     showPhysicalVerifyButton(event) {
@@ -547,9 +593,9 @@ export default class Lwc_financial_handler extends LightningElement {
         let currentIndex = event.target.dataset.index;
         let eventName = event.target.name;
         if (!isValidInput) {
+            this.payeeAcdetailsList[parseInt(currentIndex)].isDisabledAccountVerifyType = false;
             event.target.setCustomValidity('Please enter valid account number'); // Set custom error message
         }
-
         if (
             this.checkCompoLevelDuplicaton(
                 inputValue,
@@ -560,6 +606,7 @@ export default class Lwc_financial_handler extends LightningElement {
             this.payeeAcdetailsList[parseInt(currentIndex)].bankNumber = inputValue;
             this.payeeAcdetailsList[parseInt(currentIndex)].isPayeeNameChanged = true;
             this.currentTobeUpdateBankdetailsId = event.target.dataset.id;
+            this.payeeAcdetailsList[parseInt(currentIndex)].isDisabledAccountVerifyType = false;
         } else {
             this.payeeAcdetailsList[parseInt(currentIndex)].bankNumber = 0;
         }
@@ -580,7 +627,7 @@ export default class Lwc_financial_handler extends LightningElement {
         let inputValue = event.target.value;
         this.payeeAcdetailsList[parseInt(currentIndex)].verificationType =
             inputValue;
-        this.submitForBankDetails(event);
+        // this.submitForBankDetails(event);
     }
 
     selectTypeChangeHandler(event) {
@@ -702,30 +749,32 @@ export default class Lwc_financial_handler extends LightningElement {
     }
 
     nullValueValidationForBankDetails(payeeAcdetailsList) {
-        debugger;
+    debugger;
         for (const obj of payeeAcdetailsList) {
             for (const key in obj) {
-                if (obj.id === null) {
-                    if (
-                        obj.hasOwnProperty(key) &&
-                        (obj[key] === null || obj[key] === undefined || obj[key] === "")
-                    ) {
-                        return true; // If any key has no value, return true
+                if (obj.id == undefined) {
+                    for (const key in obj) {
+                    if (key != "bankNumber") {
+                        if (obj.hasOwnProperty(key) && (obj[key] === null || obj[key] === undefined || obj[key] === "")) {
+                            return true; // If any key has no value, return true
+                        }
+                    }
+
                     }
                 }
                 if (obj.isShowPhycalyVerifyButton) {
                     if (obj.isDocumentUploaded) {
 
                     } else {
-                        this.handleHighlightRow(obj.index);
-                        this.showToast("Error", "Please upload Documents", "error");
+                    this.handleHighlightRow(obj.index);
+                    this.showToast("Error", "Please upload Documents", "error");
 
                     }
                 }
 
             }
         }
-        return false; // If all properties have values, return false
+    return false; // If all properties have values, return false
     }
 
 
@@ -788,7 +837,26 @@ export default class Lwc_financial_handler extends LightningElement {
                     Entity_Type__c: payee.type,
                     Task_ID__c: payee.Task_ID__c,
                     Financial_Account__c: this.financialAccoundId,
-                    Amount_To_Be_Disbursed__c: payee.toBeDisbursedAmount
+                    Amount_To_Be_Disbursed__c: payee.toBeDisbursedAmount,
+                    Account_Name__c:payee.Account_Name__c,
+                };
+                let AccountCOntactPayeewrapper = {
+                    relatedFinancialEntity: Financial_Entity__c,
+                    name: payee.name,
+                    payeeEmail: payee.email,
+                    payeePhone: payee.phone,
+                    index: payee.index
+                };
+                AccountCOntactPayeewrapperList.push(AccountCOntactPayeewrapper);
+            }else {
+                let Financial_Entity__c = {
+                    Id:payee.id,
+                    Name: payee.name,
+                    Entity_Type__c: payee.type,
+                    Task_ID__c: payee.Task_ID__c,
+                    Financial_Account__c: this.financialAccoundId,
+                    Amount_To_Be_Disbursed__c: payee.toBeDisbursedAmount,
+                    Account_Name__c:payee.Account_Name__c,
                 };
                 let AccountCOntactPayeewrapper = {
                     relatedFinancialEntity: Financial_Entity__c,
@@ -803,14 +871,63 @@ export default class Lwc_financial_handler extends LightningElement {
         return AccountCOntactPayeewrapperList;
     }
 
+    prepareDataforPayeeRecordsFORdatabaseForCurrentIndex(payeeList,currentIndex){
+        debugger;
+        let AccountCOntactPayeewrapperList = [];
+        for (let i = 0; i < payeeList.length; i++) {
+            let payee = payeeList[i];
+            if(payee.index==currentIndex){
+            if (!payee.id) {
+                let Financial_Entity__c = {
+                    Name: payee.name,
+                    Entity_Type__c: payee.type,
+                    Task_ID__c: payee.Task_ID__c,
+                    Financial_Account__c: this.financialAccoundId,
+                    Amount_To_Be_Disbursed__c: payee.toBeDisbursedAmount,
+                    Account_Name__c:payee.Account_Name__c,
+                };
+                let AccountCOntactPayeewrapper = {
+                    relatedFinancialEntity: Financial_Entity__c,
+                    name: payee.name,
+                    payeeEmail: payee.email,
+                    payeePhone: payee.phone,
+                    index: payee.index
+                };
+                AccountCOntactPayeewrapperList.push(AccountCOntactPayeewrapper);
+            }else {
+                let Financial_Entity__c = {
+                    Id:payee.id,
+                    Name: payee.name,
+                    Entity_Type__c: payee.type,
+                    Task_ID__c: payee.Task_ID__c,
+                    Financial_Account__c: this.financialAccoundId,
+                    Amount_To_Be_Disbursed__c: payee.toBeDisbursedAmount,
+                    Account_Name__c:payee.Account_Name__c,
+                };
+                let AccountCOntactPayeewrapper = {
+                    relatedFinancialEntity: Financial_Entity__c,
+                    name: payee.name,
+                    payeeEmail: payee.email,
+                    payeePhone: payee.phone,
+                    index: payee.index
+                };
+                AccountCOntactPayeewrapperList.push(AccountCOntactPayeewrapper);
+            }
+        }
+       }
+        return AccountCOntactPayeewrapperList;
+    }
+
     prepareDataforPayeeBankDetailsRecordsFORdatabase(payeeAcdetailsList) {
         debugger;
         let newpayeeAcdetailsList = [];
         for (let i = 0; i < payeeAcdetailsList.length; i++) {
-            if (!payeeAcdetailsList[i].id) {
+            if (payeeAcdetailsList[i].id==undefined) {
                 let Financial_Entity_AC_Detail__c = {};
                 Financial_Entity_AC_Detail__c.Financial_Entity__c =
                     payeeAcdetailsList[i].selectedPayeeId;
+                    Financial_Entity_AC_Detail__c.Name =
+                    payeeAcdetailsList[i].Name;
                 Financial_Entity_AC_Detail__c.Bank_Account_Number__c =
                     payeeAcdetailsList[i].bankNumber;
                 Financial_Entity_AC_Detail__c.Banking_Account_Name__c =
@@ -828,15 +945,19 @@ export default class Lwc_financial_handler extends LightningElement {
                 Financial_Entity_AC_Detail__c.Bank_Name__c =
                     payeeAcdetailsList[i].bankName;
                 Financial_Entity_AC_Detail__c.Verification_Status__c = "New";
+                 Financial_Entity_AC_Detail__c.Bank_Account_Type__c =payeeAcdetailsList[i].Bank_Account_Type__c;
                 newpayeeAcdetailsList.push(Financial_Entity_AC_Detail__c);
             }
-            if (payeeAcdetailsList[i].id == this.currentTobeUpdateBankdetailsId && payeeAcdetailsList[i].isPayeeNameChanged == true) {
+            
+            if (payeeAcdetailsList[i].id == this.currentTobeUpdateBankdetailsId && payeeAcdetailsList[i].isPayeeNameChanged == true && this.currentTobeUpdateBankdetailsId !=undefined) {
                 let Financial_Entity_AC_Detail__c = {};
                 Financial_Entity_AC_Detail__c.Verification_Status__c = payeeAcdetailsList[i].Verification_Status__c;
                 Financial_Entity_AC_Detail__c.Physically_verified__c = payeeAcdetailsList[i].Physically_verified__c;
                 Financial_Entity_AC_Detail__c.Id = payeeAcdetailsList[i].id;
                 Financial_Entity_AC_Detail__c.Banking_Account_Name__c =
                     payeeAcdetailsList[i].bankAccountName;
+                    Financial_Entity_AC_Detail__c.Name =
+                    payeeAcdetailsList[i].Name;
                 Financial_Entity_AC_Detail__c.Financial_Entity__c =
                     payeeAcdetailsList[i].selectedPayeeId;
                 Financial_Entity_AC_Detail__c.Bank_Account_Number__c =
@@ -853,6 +974,7 @@ export default class Lwc_financial_handler extends LightningElement {
                     payeeAcdetailsList[i].verificationType;
                 Financial_Entity_AC_Detail__c.Bank_Name__c =
                     payeeAcdetailsList[i].bankName;
+                     Financial_Entity_AC_Detail__c.Bank_Account_Type__c =payeeAcdetailsList[i].Bank_Account_Type__c;
                 newpayeeAcdetailsList.push(Financial_Entity_AC_Detail__c);
             }
         }
@@ -869,8 +991,7 @@ export default class Lwc_financial_handler extends LightningElement {
                     this.showToast("Success", "Records updated successfully", "success");
                     this.refreshData();
                     this.hardRefresh();
-
-                    this.AddNewPayeeRow = false;
+                    this.AddNewPayeeRowDisable = false;
                 })
                 .catch((error) => {
                     this.showToast(
@@ -927,7 +1048,7 @@ export default class Lwc_financial_handler extends LightningElement {
         for (let i = 0; i < this.payeeList.length; i++) {
             if (!this.payeeList[i].id) {
                 if (
-                    this.payeeList[i].type == "Financial Institute" &&
+                    this.payeeList[i].type.includes(Financial_Entity_Disburse_Amount_Validation) &&
                     (this.payeeList[i].toBeDisbursedAmount == null ||
                         this.payeeList[i].toBeDisbursedAmount == undefined ||
                         this.payeeList[i].toBeDisbursedAmount == "" ||
@@ -1036,15 +1157,18 @@ export default class Lwc_financial_handler extends LightningElement {
             if (i === parseInt(currentIndex)) {
                 if (this.payeeAcdetailsList[i].isEditableDisabled) {
                     this.payeeAcdetailsList[i].isEditableDisabled = false;
+                    this.payeeAcdetailsList[i].isDisabledAccountVerifyType = false;
                     this.payeeAcdetailsList[i].isShowUpdateGreenButton = false;
                 } else if (this.payeeAcdetailsList[i].isShowUpdateGreenButton) {
                     this.payeeAcdetailsList[i].isEditableDisabled = true;
                 } else {
                     this.payeeAcdetailsList[i].isEditableDisabled = true;
+                    this.payeeAcdetailsList[i].isDisabledAccountVerifyType = true;
                 }
             } else {
                 this.payeeAcdetailsList[i].isEditableDisabled = true;
                 this.payeeAcdetailsList[i].isShowUpdateGreenButton = false;
+                this.payeeAcdetailsList[i].isDisabledAccountVerifyType = true;
             }
         }
     }
@@ -1124,10 +1248,51 @@ export default class Lwc_financial_handler extends LightningElement {
             this.currentTobeUpdateBankdetailsId = recordId;
             this.payeeAcdetailsList[parseInt(index)].isPayeeNameChanged = true;
             this.payeeAcdetailsList[parseInt(index)].Physically_verified__c = true;
+            this.submitForBankDetails(event);
 
         } else {
             this.handleHighlightRow(index);
             this.payeeAcdetailsList[parseInt(index)].isDocumentUploaded = false;
+        }
+    }
+
+    enabledEditingPayee(currentIndex){
+        debugger;
+        for (let i = 0; i < this.payeeList.length; i++) {
+            if (i == parseInt(currentIndex)) {
+                this.payeeList[i].isEditableDisabled = false;
+                this.payeeList[i].isShowEditableButton = false;
+            } else {
+                this.payeeList[i].isEditableDisabled = true;
+                this.payeeList[i].isShowEditableButton = true;
+                
+            }
+        }
+        
+    }
+
+    upatePayeeByRowUpdateButton(event){
+        debugger
+        let currentIndex = event.target.dataset.index;
+        let inputValue = event.target.value;
+        let eventName = event.target.name;
+        this.InsertMethodforPayeeDetails(
+        this.prepareDataforPayeeRecordsFORdatabaseForCurrentIndex(this.payeeList,currentIndex))
+        this.disanabledEditingPayee(currentIndex);
+
+    }
+
+    disanabledEditingPayee(currentIndex){
+        debugger
+        for (let i = 0; i < this.payeeList.length; i++) {
+            if (i == parseInt(currentIndex)) {
+                this.payeeList[i].isEditableDisabled = true;
+                this.payeeList[i].isShowEditableButton = true;
+            } else {
+                this.payeeList[i].isEditableDisabled = true;
+                this.payeeList[i].isShowEditableButton = true;
+                
+            }
         }
     }
 

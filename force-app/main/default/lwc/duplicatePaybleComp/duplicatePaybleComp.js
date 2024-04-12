@@ -43,6 +43,7 @@ export default class DuplicatePaybleComp extends LightningElement {
     @track eveFinalRecord;
     @track TotalGivenAmountInWords;
     @track finalSansctionAmountInWords;
+    @track Receivables_Amount__cWords;
     @track AvailableAmountInWord;
     @track isShowNewPayeeCom = false;
     @track isShowNewPayeeACCom = false;
@@ -52,6 +53,7 @@ export default class DuplicatePaybleComp extends LightningElement {
     @track FinancialAccountRecord
     @track FinancialAccountId;
     @track show_data_onHover=false;
+    @track createRecevables=false;
 
 
     wiredRecords;
@@ -262,6 +264,7 @@ export default class DuplicatePaybleComp extends LightningElement {
         this.AvailableAmount = this.AvailableSanctionedAmount - this.totalGivenAmount;
         this.AvailableAmountInWord = this.numberTOwordsIndianCur(this.AvailableAmount);
         this.finalSansctionAmountInWords = this.numberTOwordsIndianCur(this.finalSansctionAmount);
+        this.Receivables_Amount__cWords=this.numberTOwordsIndianCur(this.finalSansctionAmount);
         this.TotalGivenAmountInWords = this.numberTOwordsIndianCur(this.totalGivenAmount);
         
 
@@ -756,6 +759,7 @@ export default class DuplicatePaybleComp extends LightningElement {
 
     closeModal() {
         this.isShowNewPayeeCom = false;
+        this.createRecevables=false;
     }
 
     sendClosedStatementToParent(isClosed) {
@@ -1101,6 +1105,11 @@ export default class DuplicatePaybleComp extends LightningElement {
             }
 
         }
+    }
+
+    showNewRecevabls(event){
+        debugger;
+        this.createRecevables=true;
     }
 
 }
