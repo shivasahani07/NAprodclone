@@ -77,7 +77,7 @@
                      <span>
                      <b><u>Receivable Amount</u></b><br>
                      &#8377; {FinancialAccountRecord.Receivables_Amount__c}<br>
-                     {Receivables_Amount__cWords}
+                     {Receivables_Amount__In_Words}
                      </span>
                   </div>
                   <div class="slds-col slds-size_2-of-12  details_card slds-tabs_card slds-m-horizontal_medium">
@@ -178,21 +178,14 @@
                                  onchange={selectionChangeHandler}>
                               </lightning-combobox>
                            </td>
-                           <td data-label="Amount">
-                              <template if:true={obj.isAmountDisabled}>
-                                 <input type="number" class="slds-input" variant="label-hidden" label="Amount"
-                                    name="amount" value={obj.Amount__c} data-id={obj.Id} onchange={selectionChangeHandler}
-                                    data-index={obj.index} disabled={obj.isAmountDisabled}/>
-                              </template>
-                              <template if:false={obj.isAmountDisabled}>
+                           <td data-label="Amount" style="min-width: 8rem;">
                                  <lightning-input type="number" variant="label-hidden" label="Amount"
                                     name="amount" value={obj.Amount__c} data-id={obj.Id}
                                     onchange={selectionChangeHandler} data-index={obj.index}
                                     disabled={obj.isAmountDisabled}>
                                  </lightning-input>
-                              </template>
                            </td>
-                           <td data-label="Created On">
+                           <td data-label="Created On" style="min-width: 10rem;">
                               <lightning-input type="date" class="fields" variant="label-hidden" label="First Name"
                                  name="status" value={obj.createdon} data-id={obj.Id} onchange={updateValues}
                                  disabled={obj.isCreatdOnDisabled}>
@@ -359,24 +352,14 @@
             <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
                <lightning-card title="Edit Receivable" icon-name="standard:account">
                   <div class="slds-p-around_medium">
-                     <lightning-record-edit-form
-                        object-api-name="Receivable__c"
-                        record-id={recordId}
-                        onsuccess={handleSuccess}>
+                     <lightning-record-edit-form object-api-name="Receivable__c" onsuccess={handleSuccess}>
                         <lightning-messages></lightning-messages>
                         <lightning-input-field field-name="Financial_Account__c" value={FinancialAccountId} disabled></lightning-input-field>
                         <lightning-input-field field-name="Type__c"></lightning-input-field>
                         <lightning-input-field field-name="Amount__c"></lightning-input-field>
                         <lightning-input-field field-name="Mode__c"></lightning-input-field>
-                        <!-- <lightning-input-field field-name="Status__c"></lightning-input-field> -->
-                        <!-- <lightning-input-field field-name="IsActive__c"></lightning-input-field> -->
-                        <!-- <lightning-input-field field-name="Name"></lightning-input-field> -->
                         <div class="slds-m-top_medium">
-                           <lightning-button
-                              variant="brand"
-                              type="submit"
-                              label="Save">
-                           </lightning-button>
+                           <lightning-button  variant="brand" type="submit" label="Save" onclick={handledisable} disabled={disableReceivable_Save}></lightning-button>
                         </div>
                      </lightning-record-edit-form>
                   </div>
@@ -392,7 +375,7 @@
       <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
    </template>
    <template if:true={show_data_onHover}>
-      <c-lwc_-compact-layout-on-hover selectedrecord-id={financialEntityACdetailId}
+      <c-lwc_-compact-layout-on-hover selectedrecord-id={financialEntityACdetailId} 
          object-name="Financial_Entity_AC_Detail__c" title="Financial Entity Account Detail"
          onhidemodalbox={hidePopHover}></c-lwc_-compact-layout-on-hover>
    </template>

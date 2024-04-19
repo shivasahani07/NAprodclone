@@ -266,10 +266,10 @@ public without sharing class TestUtility{
      public static Paybale__c createMODTInstance(){
         Financial_Account__c testFA =CreateFinancialAccountInstance();
 		Financial_Entity__c  testFinancialEntity = CreateFinancialEntityInstance();
-        Financial_Entity_AC_Detail__c FinancialEntityAccountDetail = CreateFiancialEntityAcctDetailInsatance();
+        //Financial_Entity_AC_Detail__c FinancialEntityAccountDetail = CreateFiancialEntityAcctDetailInsatance();
         Paybale__c testMEMO = new Paybale__c();
         testMEMO.Amount__c=123456;
-        testMEMO.Financial_Entity_A_C_Details__c = FinancialEntityAccountDetail.Id;
+        //testMEMO.Financial_Entity_A_C_Details__c = FinancialEntityAccountDetail.Id;
         //testMEMO.Due_Date__c=system.today();
         testMEMO.IsActive__c=true;	
         testMEMO.Financial_Account__c=testFA.id;

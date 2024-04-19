@@ -31,6 +31,10 @@ private class TestSendPayableDetailsToCustomer {
 
         // Assertions would normally go here
     }
+    
+    
+    
+    
 
     @isTest
     static void testSendMail() {

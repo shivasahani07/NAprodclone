@@ -7,10 +7,10 @@ import deletePayableRecord from '@salesforce/apex/PayableDetailsController.delet
 import getFinancialAccId from '@salesforce/apex/Child_components_Controller.getFinancialAccId';
 import getDependentPicklistValues from '@salesforce/apex/PayableDetailsController.getDependentPicklistValues';
 import StatusFailedValue from '@salesforce/label/c.Payables_Status_Failed';
+import OpportunityUrl from '@salesforce/label/c.OpportunityUrl';
 
 export default class DuplicatePaybleComp extends LightningElement {
-
-
+    
     debugger;
     @track finalSansctionAmount = 0;
     @api recordId;
@@ -43,7 +43,7 @@ export default class DuplicatePaybleComp extends LightningElement {
     @track eveFinalRecord;
     @track TotalGivenAmountInWords;
     @track finalSansctionAmountInWords;
-    @track Receivables_Amount__cWords;
+    @track Receivables_Amount__In_Words;
     @track AvailableAmountInWord;
     @track isShowNewPayeeCom = false;
     @track isShowNewPayeeACCom = false;
@@ -54,6 +54,7 @@ export default class DuplicatePaybleComp extends LightningElement {
     @track FinancialAccountId;
     @track show_data_onHover=false;
     @track createRecevables=false;
+    @track disableReceivable_Save=false;
 
 
     wiredRecords;
@@ -106,14 +107,13 @@ export default class DuplicatePaybleComp extends LightningElement {
                 console.log('taskId', this.TaskId);
                 console.log('FinancialAccountRecord', this.FinancialAccountRecord);
                 this.AvailableSanctionedAmount = parseInt(this.FinancialAccountRecord.Sanctioned_Amount__c) - parseInt(this.FinancialAccountRecord.Receivables_Amount__c)
+                this.Receivables_Amount__In_Words=this.numberTOwordsIndianCur(parseInt(this.FinancialAccountRecord.Receivables_Amount__c));
                 this.AvailableSanctionedAmountInWords= this.numberTOwordsIndianCur(parseInt(this.AvailableSanctionedAmount));
-                
                 if (this.initFunctionality) {
                     this.fetchPaybleData();
                 }else{
                     this.callingApex(this.FinancialAccountId); 
-                }
-                  
+                } 
             })
             .catch(error => {
                 console.log('In connected call back error....');
@@ -291,14 +291,15 @@ export default class DuplicatePaybleComp extends LightningElement {
         let currentIndex = event.target.dataset.index;
         let currentValue = event.target.value;
         let cureentId = event.target.dataset.id;
-        if (confirm(" are you Sure want to delete memo") == true) {
+        //if (confirm(" are you Sure want to delete memo") == true) {
             if (currentIndex!="" && currentIndex!=null && currentIndex!=undefined) {
                 deletePayableRecord({ recordId: currentIndex })
                     .then(response => {
                         if(response=='success'){
                             this.showToast('SUCCESS', 'MEMO deleted Successfully', 'success', 'dismissable');
                             this.payAblesList=this.payAblesList.filter(item=>item.index!=cureentId);
-                            this.calculateAvailableAmount();
+                            this.isDisabledAddRowButton=false;
+                            this.calculateAvailableAmount(); 
                         }
                     })
                     .catch(error => {
@@ -308,11 +309,12 @@ export default class DuplicatePaybleComp extends LightningElement {
             }else{
                this.payAblesList=this.payAblesList.filter(item=>item.index!=cureentId);
                this.showToast('SUCCESS', 'MEMO deleted Successfully', 'success', 'dismissable');
+               this.isDisabledAddRowButton=false;
                this.calculateAvailableAmount();
             }
-        } else {
-            return;
-        }
+        // } else {
+        //     return;
+        // }
         
         this.CheckforEditButtonVisibility('On Save/On_Delete');
     }
@@ -389,7 +391,7 @@ export default class DuplicatePaybleComp extends LightningElement {
         this.payAblesList[intIndexNumber - 1].isPaymentModeDisabled = true;
         this.payAblesList[intIndexNumber - 1].PayeeName = tempPayeeName;
         this.payAblesList[intIndexNumber - 1].payMentModePiclist = this.getPaymentModeAsPer_Entity(currentValue)
-        this.Check_mandatory_field_validation(this.payAblesList,intIndexNumber);
+        //this.Check_mandatory_field_validation(this.payAblesList,intIndexNumber);
     }
 
     payeeNameChangeHandler(event) {
@@ -423,7 +425,7 @@ export default class DuplicatePaybleComp extends LightningElement {
         this.payAblesList[parseInt(currentIndex) - 1].selectedpayeename = currentValue;
         this.payAblesList[parseInt(currentIndex) - 1].bankAccList = ActualselectedfinancialentityACList;
         console.log('BankPicklist', this.bankEntityPicklist);
-        this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));
+        //this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));
     }
 
     bankAccountChangeHandler(event) {
@@ -444,7 +446,7 @@ export default class DuplicatePaybleComp extends LightningElement {
             }
         }
 
-        this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));
+        //this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));
     }
 
     paymentModeChangeHandler(event) {
@@ -464,7 +466,7 @@ export default class DuplicatePaybleComp extends LightningElement {
                 }
             }
         }
-        this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));
+        //this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));
     }
     setTimeoutId;
     amountChangeHandler(event) {
@@ -475,16 +477,27 @@ export default class DuplicatePaybleComp extends LightningElement {
         let cureentId = event.target.dataset.id;
         let prevIndex = currentIndex - 1;
         debugger;
-        if (currentValue <= 0 || currentValue == null) {
-            alert('Please Enter a Valid Amount');
-             this.isDisabledAddRowButton = true;
-        } else {
-            this.payAblesList[parseInt(currentIndex) - 1].Amount__c = currentValue != null || currentValue != '' ? parseInt(currentValue) : 0;
+        this.payAblesList[parseInt(currentIndex) - 1].Amount__c=currentValue != null || currentValue != '' ? parseInt(currentValue) : 0;
+        if(currentValue==null || currentValue==undefined || currentValue ==''){
             this.calculateAvailableAmount();
+        }else if(currentValue!=undefined && currentValue != null && currentValue != '' ){
+            if(this.calculateAmountInMemo(this.payAblesList,(parseInt(currentIndex) - 1))==false){
+                this.calculateAvailableAmount();
+             }
         }
-        setTimeout(() => {
-            this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));           
-        }, 4000);   
+        // if (currentValue <= 0 || currentValue == null) {
+        //      this.isDisabledAddRowButton = true;
+        //      currentValue==null || currentValue==undefined || currentValue ==''?this.calculateAvailableAmount():null;
+        // } else {
+        //     this.payAblesList[parseInt(currentIndex) - 1].Amount__c = currentValue != null || currentValue != '' ? parseInt(currentValue) : 0;
+        //     if(this.calculateAmountInMemo(this.payAblesList,(parseInt(currentIndex) - 1))==false){
+        //         this.calculateAvailableAmount();
+        //     }
+           
+        // }
+        // setTimeout(() => {
+        //     this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));           
+        // }, 4000);   
     }
 
     statusChangeHandler(event) {
@@ -504,7 +517,7 @@ export default class DuplicatePaybleComp extends LightningElement {
             }
         }
 
-        this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));
+        //this.Check_mandatory_field_validation(this.payAblesList,(parseInt(currentIndex)));
     }
 
     calculateAvailableAmount() {
@@ -516,22 +529,45 @@ export default class DuplicatePaybleComp extends LightningElement {
                 givenAmount += item.Amount__c;
             }
         })
-
         this.totalGivenAmount = givenAmount;
-        if (this.finalSansctionAmount < this.totalGivenAmount) {
-            alert('Given Amount can not be more then Available Sancationed Limit');
-            this.AvailableAmount = 0;
-            this.isDisabledAddRowButton = true;
-
-        } else {
-            this.AvailableAmount = this.finalSansctionAmount - this.totalGivenAmount;
-            this.isDisabledAddRowButton = false;
-        }
+        this.AvailableAmount = parseInt(this.finalSansctionAmount) - parseInt(this.totalGivenAmount)
         let totalGivenAmmountInwprds = this.numberTOwordsIndianCur(this.totalGivenAmount);
         this.TotalGivenAmountInWords = totalGivenAmmountInwprds;
         let AvailableAmountInWord = this.numberTOwordsIndianCur(this.AvailableAmount);
         this.AvailableAmountInWord = AvailableAmountInWord;
 
+    }
+
+    calculateAmountInMemo(Payablelist,currentIndex){
+        debugger;
+        let sanctionedAmount =parseInt(this.AvailableSanctionedAmount);
+
+        let v_TotalGivenAmount=0;
+        let v_RemaingAmount=0;
+        let shouldskip;
+         if(Payablelist.length>0){
+            Payablelist.forEach(item => {
+                if (item.Amount__c && !StatusFailedValue.includes(item.Status__c)) {
+                    v_TotalGivenAmount += item.Amount__c;
+                }
+            })
+         }
+        
+        if((sanctionedAmount!=null && sanctionedAmount!=undefined) && (v_TotalGivenAmount!=null && v_TotalGivenAmount!=undefined)){
+            v_RemaingAmount= sanctionedAmount-v_TotalGivenAmount;
+            if((v_RemaingAmount<0)){
+                this.payAblesList[parseInt(currentIndex)].Amount__c='';
+                this.showToast('Error','MEMO Value Is Greater Than Sanction Amount','error');
+                shouldskip=true;
+            }else{
+                this.totalGivenAmount=v_TotalGivenAmount;
+                this.TotalGivenAmountInWords=this.numberTOwordsIndianCur(this.totalGivenAmount)
+                this.AvailableAmount=v_RemaingAmount;
+                this.AvailableAmountInWord=this.numberTOwordsIndianCur(this.AvailableAmount)
+                shouldskip=false;
+            }
+        }
+       return shouldskip==true ?false:true;
     }
 
     blockAddRow() {
@@ -542,23 +578,28 @@ export default class DuplicatePaybleComp extends LightningElement {
             if (this.FinancialAccountRecord.Product__c != null && this.FinancialAccountRecord.Product__c != undefined) {
                 if (this.FinancialAccountRecord.Product__r.Disbursal_Type__c != null && this.FinancialAccountRecord.Product__r.Disbursal_Type__c != undefined && this.FinancialAccountRecord.Product__r.Disbursal_Type__c == 'Full disbursal' && this.payAblesList.length == 1) {
                     addRowErrorMessage.isenableBlock = true;
-                    addRowErrorMessage.errorMessage = 'You Can not Add More Rows';
+                    addRowErrorMessage.errorMessage = 'No More Amount is Pending for Disbursement';
                     addRowErrorMessage.type = 'error';
                     this.isDisabledAddRowButton = true;
                 } else if (this.FinancialAccountRecord.Product__r.Disbursal_Type__c != 'Full disbursal') {
-                    this.payAblesList.forEach(item => {
-                        if ((!item.Amount__c || item.Amount__c == 0) && !enableBlock) {
-                            // show the toast();
-                            enableBlock = true;
-                            addRowErrorMessage.isenableBlock = true;
-                            addRowErrorMessage.errorMessage = 'Please enter the amount in each row to proceed further';
-                            addRowErrorMessage.type = 'warning';
-                        } else {
-                            addRowErrorMessage.isenableBlock = false;
-                            addRowErrorMessage.errorMessage = null;
-                            addRowErrorMessage.type = null;
-                        }
-                    })
+                    if(parseInt(this.AvailableAmount)>0 && parseInt(this.AvailableAmount)!=0){
+                        this.payAblesList.forEach(item => {
+                            if ((!item.Amount__c || item.Amount__c == 0) && !enableBlock) {
+                                enableBlock = true;
+                                addRowErrorMessage.isenableBlock = true;
+                                addRowErrorMessage.errorMessage = 'Please enter the amount in each row to proceed further';
+                                addRowErrorMessage.type = 'warning';
+                            } else {
+                                addRowErrorMessage.isenableBlock = false;
+                                addRowErrorMessage.errorMessage = null;
+                                addRowErrorMessage.type = null;
+                            }
+                        })
+                    }else{
+                        addRowErrorMessage.isenableBlock = true;
+                        addRowErrorMessage.errorMessage = 'No More Amount is Pending for Disbursement';
+                        addRowErrorMessage.type = 'error'; 
+                    }
                 }
             }
         }
@@ -608,7 +649,6 @@ export default class DuplicatePaybleComp extends LightningElement {
                     totalClosedCount = totalClosedCount + 1
                     Paybale__cList.push(Paybale__c);
                 }
-
             }
             this.totalClosedRecordsCount = totalClosedCount;
 
@@ -804,7 +844,7 @@ export default class DuplicatePaybleComp extends LightningElement {
     handleFinancialAccount(){
         debugger;
         let fId=this.FinancialAccountRecord.Id;
-        window.open('https://northernarc--narcdevpro.sandbox.lightning.force.com/lightning/r/Financial_Account__c/'+fId+'/view','_blank');
+        window.open(OpportunityUrl+fId,'_blank')
     }
 
     /**
@@ -917,6 +957,7 @@ export default class DuplicatePaybleComp extends LightningElement {
                         this.payAblesList[(parseInt(rowindex)-1)].isAmountDisabled=true;
                     }
              }
+             this.isDisabledAddRowButton=false;
              this.isLoading=false;
              this.CheckforEditButtonVisibility('On Save/On_Delete');
        })
@@ -968,6 +1009,7 @@ export default class DuplicatePaybleComp extends LightningElement {
                     }
                 })
             }
+            this.isDisabledAddRowButton=true;
         }
 
         @track financialEntityACdetailId;
@@ -1011,17 +1053,15 @@ export default class DuplicatePaybleComp extends LightningElement {
            
         }
 
-
-        getPaymentModeOptions_ByEntityName(){
-
-            let payModeOptions = [];
-                                            
+        handleSuccess(){
+            debugger;
+            this.createRecevables=false;
         }
 
-       
-
-
-
+        handledisable(){
+            debugger;
+            this.disableReceivable_Save=true;
+        }
 
 
 

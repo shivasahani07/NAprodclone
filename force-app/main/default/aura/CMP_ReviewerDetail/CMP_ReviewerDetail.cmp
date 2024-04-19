@@ -251,8 +251,8 @@
                     <aura:set attribute="else">
                         <aura:if isTrue="{!AND(v.IsEdit==false,v.selectedTaskId.length!=0)}">
                             <div class="slds-align_absolute-center">
-                                <lightning:button variant="brand"    onclick="{!c.handleClickApprove}">Approved</lightning:button>
-                                <lightning:button variant="destructive"   onclick="{!c.handleClickReject}">Rejected</lightning:button>
+                                <lightning:button variant="brand"    onclick="{!c.handleClickApprove}">Approve</lightning:button>
+                                <lightning:button variant="destructive"   onclick="{!c.handleClickReject}">Reject</lightning:button>
                             </div>
                         </aura:if>
                     </aura:set>
@@ -302,7 +302,8 @@
                                   LoginUserRelatedGroup="{!v.LoginUserRelatedGroup}"
                                   Approver_OR_Rejection_array="{!v.Approver_OR_Rejection_array}"
                                   currentUserName="{!v.currentUserName}"
-                                  Opportunity_Related_task="{!v.Opportunity_Related_task}"/>
+                                  Opportunity_Related_task="{!v.Opportunity_Related_task}"
+                                  IsEdit="{!v.IsEdit}"/>/>
     </aura:if>
      <!--Checklist PopUp-->
     <aura:if isTrue="{!v.show_Reviewer_checklist}">
@@ -322,6 +323,7 @@
                                   taskRec="{!v.taskRec}"
                                   child_comp_array="{!v.child_comp_array}"
                                   LoginUserRelatedGroup="{!v.LoginUserRelatedGroup}"
-                                  currentUserName="{!v.currentUserName}"/>
+                                  currentUserName="{!v.currentUserName}"
+                                  IsEdit="{!v.IsEdit}"/>
     </aura:if>
 </aura:component>

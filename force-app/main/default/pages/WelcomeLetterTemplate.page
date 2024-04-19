@@ -1,0 +1,255 @@
+<apex:page renderAs="pdf" applyHtmlTag="false" showHeader="false" title="Quotation PDF" standardStylesheets="false" controller="WelcomeLetterController"
+           
+           applyBodyTag="false" showQuickActionVfHeader="false">
+    
+    <html>
+        
+        <head>
+            
+            <style>
+                
+                @page {
+                
+                size: A4;
+                margin-top:2.1cm;
+                margin-bottom:2.1cm;
+                margin-left:0cm;
+                margin-right:0cm;
+                @top-center {
+                
+                content: element(header);
+                
+                }
+                
+                @bottom-left {
+                
+                content: element(footer);
+                
+                }
+                
+                }
+                
+                div.header {
+                
+                display: block;
+                
+                position: running(header);
+                }
+                
+                div.footer {
+                
+                
+                display: block;
+                
+                position: running(footer);
+                
+                }
+                
+                .pagenumber:before {
+                
+                content: counter(page);
+                
+                }
+                
+                .pagecount:before {
+                
+                content: counter(pages);
+                
+                }
+                
+                body {
+                background:#282828;
+                color:white;
+                }
+                
+                th {
+                
+                min-height: 15px;
+                
+                max-height: auto;
+                
+                
+                }
+                
+                td {
+                
+                min-height: 15px;
+                
+                max-height: auto;
+                
+                }
+                
+                h1, h2, h3, h4{margin:0; padding:0;}
+                
+                p{margin:4px; padding:0;}
+                
+            </style>
+            
+        </head>
+        
+        <body>
+            
+            
+            
+            <div class="header" style=" background:#333333 ! important;text-align:center;margin-bottom:0px ! important;">
+                
+                <br/>
+                
+                <span style="text-align:center;"><img src="{!$Resource.NortherArcLogo}"  style="height:60px;"  align="center"/></span>
+                
+                <br/>
+                
+            </div>
+            
+            <div class="footer" style=" background:#333333 ! important;">
+                
+                <div style="border-bottom:5px #4fc5e0 solid;">
+                    
+                    <table cellspacing="0" cellpadding="0" border="0" style="width: 100%; border-collapse: collapse; border-color: #4fc5e0; text-align:left; border-bottom:5px #4fc5e0 solid;">
+                        
+                        <tr style="font-size:16px;">
+                            
+                            <td style=" font-size:12px; text-align:center; ">
+                                
+                                <div style="position:relative; border-top:1px #22a2db solid; padding-top:20px;">
+                                    
+                                    <p>
+                                        
+                                        <strong><a target="_blank" style="color:white;" rel="noopener noreferrer">10th Floor,IIT M Reaserch Park,1,Kanagam Village, Taramani, Chennai - 600113</a></strong>
+                                        
+                                    </p>
+                                    
+                                    <p>
+                                        
+                                        <a target="_blank" style="color:white;" rel="noopener noreferrer">@2021 NorthernArc. All rights reserved.</a>
+                                        
+                                    </p>
+                                    
+                                    <br/>
+                                    
+                                </div>
+                                
+                            </td>
+                            
+                        </tr>
+                        
+                    </table>
+                    
+                </div>
+                
+            </div>
+            
+            <div>
+                <table id="theGrid" >
+                    <tbody>
+                        <tr >
+                            <td style="width:100%"><span id="theFirst" style="font-size:45px;color:#4fc5e0">Welcome Letter</span></td>
+                            <td style=""><span id="theSecond">Date:27/02/2023</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <p>
+                    Reference No./Application No: {!fa_Record.Name}
+                </p>
+                <p >
+                    S Alagarsamy
+                    No 2/25, North Street,Thanakkankulam Post
+                    Vedarpuliankulam,Thanakkankulam,Madurai - 625006
+                    Mob#: {!fa_Record.Account_Name__r.Phone}
+                    
+                </p>
+            </div>
+            
+            <div style="margin-top:50px;">
+                <p>
+                    Dear Sir/Madam,
+                </p>
+                <p>
+                    Greetings from Northern Arc Capital! 
+                </p>
+            </div>
+            <div>
+                <p>
+                    We are pleased to inform you that your Loan sanctioned by Northern Arc Capital Limited (“Northern Arc”) vide sanction letter dated <apex:outputText value="{0, date, MMMM d','  yyyy}"><apex:param value="{!fa_Record.Sanction_Date__c}" /></apex:outputText>  amounting to INR {!fa_Record.Sanctioned_Amount__c}/- has been successfully disbursed to your bank account. Your Loan Account Number is {!fa_Record.Name}
+                    
+                </p><br/>
+                <p>
+                    The Loan is repayable in {!fa_Record.Installment__c} equal monthly instalments (“EMI”). An EMI of INR {!fa_Record.Installment_Amount__c}/- is payable per month. Your first EMI payment is due on<apex:outputText value="{0, date, MMMM d','  yyyy}"><apex:param value="{!fa_Record.Installment_Due_On__c}" /></apex:outputText>  A detailed repayment schedule containing the exact due dates and amounts payable is available in Annexure I of this letter.
+                </p><br/>
+                <p>
+                    Northern Arc shall present the cheque/NACH/e-NACH provided by you for payment of EMI on the 5th day of each month. Please ensure that your bank account is adequately funded. Bounce or delay in payment could result in levy of additional charges or penal interest and could adversely impact your credit score. 
+                </p> <br/> 
+                <p>
+                    For any kind of assistance from the customer support of Northern Arc please feel free to customersupport@northernarc.com. A detailed grievance redressal mechanism is available at https://www.northernarc.com/grievance-redressal-mechanism. 
+                </p><br/>
+                <p>
+                    We thank you for choosing Northern Arc. 
+                </p>
+                <p>
+                    For Northern Arc Capital Limited 
+                </p>
+            </div>
+            <div style="page-break-after: always;">
+            </div>
+            <div>
+                <table id="theGrid" >
+                    <tbody>
+                        <tr >
+                            <td style="width:100%"><span id="theFirst" style="font-size:45px;color:#4fc5e0">Welcome Letter</span></td>
+                            <td style=""><span id="theSecond">Date:27/02/2023</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <p>
+                    Reference No./Application No: 102002972690
+                </p>
+                <p >
+                    S Alagarsamy
+                    No 2/25, North Street,Thanakkankulam Post
+                    Vedarpuliankulam,Thanakkankulam,Madurai - 625006
+                    Mob#: 9965299901
+                    
+                </p>
+            </div>
+            
+            <div style="margin-top:50px;">
+                <p>
+                    Dear Sir/Madam,
+                </p>
+                <p>
+                    Greetings from Northern Arc Capital! 
+                </p>
+            </div>
+            <div>
+                <p>
+                    We are pleased to inform you that your Loan sanctioned by Northern Arc Capital Limited (“Northern Arc”) vide sanction letter dated 11-07-2022 amounting to INR 10,00,000.00/- has been successfully disbursed to your bank account. Your Loan Account Number is 102002972690
+                    
+                </p><br/>
+                <p>
+                    The Loan is repayable in 120 equal monthly instalments (“EMI”). An EMI of INR 18,018.00/- is payable per month. Your first EMI payment is due on 05-09-2022 A detailed repayment schedule containing the exact due dates and amounts payable is available in Annexure I of this letter.
+                </p><br/>
+                <p>
+                    Northern Arc shall present the cheque/NACH/e-NACH provided by you for payment of EMI on the 5th day of each month. Please ensure that your bank account is adequately funded. Bounce or delay in payment could result in levy of additional charges or penal interest and could adversely impact your credit score. 
+                </p> <br/> 
+                <p>
+                    For any kind of assistance from the customer support of Northern Arc please feel free to customersupport@northernarc.com. A detailed grievance redressal mechanism is available at https://www.northernarc.com/grievance-redressal-mechanism. 
+                </p><br/>
+                <p>
+                    We thank you for choosing Northern Arc. 
+                </p>
+                <p>
+                    For Northern Arc Capital Limited 
+                </p>
+            </div>
+            
+            
+            
+        </body>
+        
+    </html>
+    
+</apex:page>

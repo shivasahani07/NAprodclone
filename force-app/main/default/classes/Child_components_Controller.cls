@@ -37,7 +37,7 @@ public without sharing class Child_components_Controller {
                         } 
                     }
                 }
-                PRCFList=[Select Id,Comments__c,Checklist_Reviewer_value__c,Current_Review_Level__c,Parent_Task_Id__c,Process_Attribute_Review_Detail__c,Process_Review_Checklist_Detail__c,Task_ID__c,Process_Review_Checklist_Detail__r.Checklist_Name__c,Review_Related_TaskId__c From Process_Review_Checklist_FACT__c Where Parent_Task_Id__c=:recordId];
+                PRCFList=[Select Id,Comments__c,Checklist_Reviewer_value__c,Current_Review_Level__c,Parent_Task_Id__c,Process_Attribute_Review_Detail__c,Process_Review_Checklist_Detail__c,Task_ID__c,Process_Review_Checklist_Detail__r.Checklist_Name__c,Review_Related_TaskId__c,Last_Commented_Date__c From Process_Review_Checklist_FACT__c Where Parent_Task_Id__c=:recordId];
                 if(!l_PRC_id.isEmpty()){
                      PRCList=[Select Id,(Select Id,Process_Review_Checklist__c,Checklist_Name__c From Process_Review_Checklist_Details__r) From Process_Review_Checklist__c Where Id=:l_PRC_id];
                 }
@@ -106,7 +106,8 @@ public without sharing class Child_components_Controller {
             UserRec=[Select Id,Name From User Where Id=:Taskrec.Submitted_User__c];
         }
         If(TaskRec.Id!=null){
-            ChildTasks=[Select Id,Subject,OwnerId,Owner.Name,ActivityDate,UserId__r.Name,Submitted_User__c,Previous_Owner__c,Process_Path_Task_Detail__c,Status,Description,Parent_Task_Id__c,Current_Review_Level__c,No_Of_Times_Reviewed_Count__c,Process_Attribute_Review_Detail__c From Task Where Parent_Task_Id__c=:TaskId AND Current_Review_Level__c!=null Order By Current_Review_Level__c];
+            ChildTasks=[Select Id,Subject,OwnerId,Owner.Name,ActivityDate,UserId__r.Name,Submitted_User__c,Previous_Owner__c,Process_Path_Task_Detail__c,
+                        Status,Description,Parent_Task_Id__c,Current_Review_Level__c,No_Of_Times_Reviewed_Count__c,Process_Attribute_Review_Detail__c,Last_Open_Date__c From Task Where Parent_Task_Id__c=:TaskId AND Current_Review_Level__c!=null Order By Current_Review_Level__c];
         }
         String user_name=userinfo.getName();
         wrapperRec.login_user_UserName=user_name;
@@ -171,6 +172,7 @@ public without sharing class Child_components_Controller {
                     tsrec.Status = 'Open';
                 }else{
                     tsrec.Status = 'Submited For Review';
+                    tsrec.Last_Open_Date__c=DateTime.valueOf(system.now());
                     tsrec.Subject = 'Review For - ' + Taskre.Subject;
                     tsrec.Parent_Task_Id__c = Taskre.Id;
                     tsrec.Submitted_User__c = LoginUserId;
@@ -285,12 +287,21 @@ public without sharing class Child_components_Controller {
     
     @AuraEnabled
     Public static List<Process_Review_Checklist_FACT__c> upsert_PRCF(List<Process_Review_Checklist_FACT__c> PRCFRecord,String RelatedId){
-        set<Id> PRCD = new set<Id>();
-        set<Id> PRCD_Relatedpptd = new set<Id>();
-        Map<Id,Process_Review_Checklist_Detail__c> PCDIDRelatedPPTDId=new Map<Id,Process_Review_Checklist_Detail__c>();
-       
-        if(!PRCFRecord.isEmpty()){ 
-            Upsert PRCFRecord;
+        try{
+            set<Id> PRCD = new set<Id>();
+            set<Id> PRCD_Relatedpptd = new set<Id>();
+            Map<Id,Process_Review_Checklist_Detail__c> PCDIDRelatedPPTDId=new Map<Id,Process_Review_Checklist_Detail__c>();
+            system.debug('PRCFRecord'+PRCFRecord);
+            if(!PRCFRecord.isEmpty()){ 
+                Upsert PRCFRecord;
+            } 
+        }catch (Exception e){
+            System.debug('Exception type caught: ' + e.getTypeName());    
+            System.debug('Message: ' + e.getMessage());    
+            System.debug('Cause: ' + e.getCause());
+            System.debug('Line number: ' + e.getLineNumber());    
+            System.debug('Stack trace: ' + e.getStackTraceString());
+            throw new AuraHandledException(e.getMessage());
         }
         return PRCFRecord;
     }

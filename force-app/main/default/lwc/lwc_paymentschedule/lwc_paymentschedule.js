@@ -264,7 +264,7 @@ export default class Lwc_paymentschedule extends LightningElement {
     }
     SubmitpsRecord(event) {
         this.isSpinner = true;
-        var temppaymentschedule = {...this.paymentschedule};
+        var temppaymentschedule = {...this.paymentschedule, Task_Id__c : ''};
         delete temppaymentschedule.disableBF;
         delete temppaymentschedule.disableCP;
         delete temppaymentschedule.disableCper;
@@ -276,7 +276,7 @@ export default class Lwc_paymentschedule extends LightningElement {
         delete temppaymentschedule.disableVSD;
         delete temppaymentschedule.mandCper;
         delete temppaymentschedule.mandFper;
-        temppaymentschedule.task_Id__c = this.recId
+        temppaymentschedule.Task_Id__c = this.recId
         debugger;
         Submitpaymentschedule({ PsRecord: temppaymentschedule })
             .then(result => {

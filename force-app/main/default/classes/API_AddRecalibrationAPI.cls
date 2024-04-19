@@ -6,8 +6,12 @@ public class API_AddRecalibrationAPI{
         try{
             NUScoreCreds__mdt webCreds = NUScoreCreds__mdt.getInstance('addRecalibration');
             system.debug('webCreds--->' + webCreds);
-            Paymentschedulewrapper Paymentschedulewrap = GeneratePsDetails(TaskId);
-            String endpoint = webCreds.endpoint__c + Paymentschedulewrap.PsExtId + '?submit_remarks=' + (Paymentschedulewrap.submitRemarks != null ? EncodingUtil.urlEncode(Paymentschedulewrap.submitRemarks, 'UTF-8'): '');
+            RecalibrationWrapper RecalibrationWrap = GeneratePsDetails(TaskId);
+            String reqBody = JSON.serialize(RecalibrationWrap);
+            System.debug('reqBody =====> ' + reqBody);
+            auditwarp.RequestBody = reqBody;
+
+            String endpoint = webCreds.endpoint__c; // + Paymentschedulewrap.PsExtId + '?submit_remarks=' + (Paymentschedulewrap.submitRemarks != null ? EncodingUtil.urlEncode(Paymentschedulewrap.submitRemarks, 'UTF-8'): '');
             String apiKey = webCreds.apiKey__c;
             String groupKey = webCreds.groupKey__c;
 
@@ -17,6 +21,10 @@ public class API_AddRecalibrationAPI{
             request.setHeader('API-KEY', apiKey);
             request.setHeader('GROUP-KEY', groupKey);
             request.setHeader('Content-Length', '0');
+            request.setHeader('Content-Type', 'application/json');
+            request.setBody(reqBody);
+
+            
 
             // Send the request
             Http http = new Http();
@@ -29,9 +37,11 @@ public class API_AddRecalibrationAPI{
                 System.debug('Response body: ' + responseBody);
                 auditwarp.ResponseBody = responseBody;
                 auditwarp.status = Label.AuditAPIStatus;
+                updatePsRecalibrationstatus(Label.AuditAPIStatus, String.valueOf(RecalibrationWrap.paymentScheduleId));
             } else{
                 auditwarp.ResponseBody = response.getBody();
                 auditwarp.status = Label.AuditAPIFailedStatus;
+                updatePsRecalibrationstatus(Label.AuditAPIFailedStatus, String.valueOf(RecalibrationWrap.paymentScheduleId));
                 System.debug('Failed to create partner. Status code: ' + response.getStatusCode());
             }
 
@@ -43,10 +53,12 @@ public class API_AddRecalibrationAPI{
         return JSON.serialize(auditwarp);
     }
 
-    Public static Paymentschedulewrapper GeneratePsDetails(Id TaskId){
+    Public static RecalibrationWrapper GeneratePsDetails(Id TaskId){
         Task TaskRec = new Task();
         List<Payment_Schedule__c> psrecord = new List<Payment_Schedule__c>();
         Paymentschedulewrapper Paymentschedulewrap = new Paymentschedulewrapper();
+        RecalibrationWrapper RecalibrationWrap = new RecalibrationWrapper();
+        List<Document_Handler__c> DocHandlerList = new List<Document_Handler__c>();
 
         try {
             
@@ -63,15 +75,33 @@ public class API_AddRecalibrationAPI{
                 system.debug('AccountId +==> ' + Opp.AccountId);
                 if (TaskRec.whatId != null && String.valueOf(TaskRec.whatId).startsWith('006')) {
 
-                    psrecord = [SELECT Billing_Frequency__c,Ceiling_Period__c,Ceiling_Price__c,Comment__c,Cost_Price_Type__c,CreatedDate,Floor_Period__c,Payment_Schedule_ExternalId__c,
-                            Floor_Price__c,Id,Model_Build_Price__c,Model_Recalibration_Price__c,Name,Opportunity__c,Opportunity__r.Account.CustomerID__c,validity_End_Date__c,validity_start_Date__c,
+                    psrecord = [SELECT Billing_Frequency__c,Ceiling_Period__c,Ceiling_Price__c,Comment__c,Cost_Price_Type__c,CreatedDate,Floor_Period__c,Payment_Schedule_ExternalId__c,New_Recalibration_Price__c,
+                            Floor_Price__c,Id,Model_Build_Price__c,Model_Recalibration_Price__c,Name,Opportunity__c,Opportunity__r.Account.CustomerID__c,validity_End_Date__c,validity_start_Date__c,Recalibration_Price_Status__c,
                             (SELECT CreatedDate,End_Value__c,Id,Name,Payment_Schedule__c,Price_Structure_Reset_Frequency__c,Price_Structure_Type__c,Rate__c,Start_Value__c FROM Price_Structures__r )
                             FROM Payment_Schedule__c where Opportunity__r.AccountId =: Opp.AccountId and Opportunity__r.Type ='Payment Schedule Creation' LIMIT 1];
                     if (psrecord != null) {
                         //Paymentschedulewrap.PartnerId = psrecord[0].Opportunity__r.Account.CustomerID__c;
                         Paymentschedulewrap.PsExtId = psrecord[0].Payment_Schedule_ExternalId__c;
-
                         Paymentschedulewrap.submitRemarks = psrecord[0].Comment__c;
+
+                        RecalibrationWrap.paymentScheduleId = Long.valueOf(psrecord[0].Payment_Schedule_ExternalId__c);
+                        if(psrecord[0].Recalibration_Price_Status__c == '' || psrecord[0].Recalibration_Price_Status__c == null){
+                            RecalibrationWrap.type = 'modelBuild';
+                            RecalibrationWrap.charges = psrecord[0].Model_Build_Price__c;
+                        }
+                        else if (psrecord[0].Recalibration_Price_Status__c != '' || psrecord[0].Recalibration_Price_Status__c == 'In Progress') {
+                            RecalibrationWrap.type = 'recalibration';
+                            RecalibrationWrap.charges = psrecord[0].New_Recalibration_Price__c;
+                        }
+                    }
+
+                    DocHandlerList = [Select Id, Name, Document_Name__c, DMS_Document_Path__c from Document_Handler__c where Opportunity__c =: TaskRec.whatId];
+                    if (DocHandlerList.size() > 0) {
+                        for (Document_Handler__c docHand : DocHandlerList) {
+                        if ( docHand.Document_Name__c != null && docHand.Document_Name__c.contains('Recalibration Document')) {
+                                RecalibrationWrap.recalExecutedDocId = docHand.DMS_Document_Path__c;
+                            }
+                        }
                     }
                 }
             }  
@@ -80,7 +110,18 @@ public class API_AddRecalibrationAPI{
             System.debug('The error occured Due to :: ' + e.getMessage());
             System.debug('The error occured Due to :: ' + e.getLineNumber());
         }
-        return Paymentschedulewrap;
+        return RecalibrationWrap;
+    }
+
+    public static void updatePsRecalibrationstatus(String Status, String PsExtId){
+
+        Payment_Schedule__c updatePs = new Payment_Schedule__c();
+        updatePs.Payment_Schedule_ExternalId__c = PsExtId;
+        updatePs.Recalibration_Price_Status__c = Status;
+
+        Schema.SObjectField ftoken = Payment_Schedule__c.Fields.Payment_Schedule_ExternalId__c;
+        Database.UpsertResult results = Database.Upsert(updatePs, ftoken,false);
+
     }
 
     Public class auditwrapper{
@@ -96,7 +137,7 @@ public class API_AddRecalibrationAPI{
     }
 
     public class RecalibrationWrapper{
-        public integer paymentScheduleId;
+        public Long paymentScheduleId;
         public decimal charges;
         public string type;
         public String recalExecutedDocId;

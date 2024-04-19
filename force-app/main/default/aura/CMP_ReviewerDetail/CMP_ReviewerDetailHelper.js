@@ -403,6 +403,8 @@
     getAllPrevious_Based_on_Reject_level:function(component, event, helper,reject_level,reviewer_detail_id,task_Reviewer_level){
         debugger;
         var ReviewerList=component.get("v.ReviewerList");
+        console.log('ReviewerList',JSON.stringify(ReviewerList));
+        console.log('reviewer_detail_id',JSON.stringify(reviewer_detail_id));
         var taskRec=component.get("v.taskRec");
         let Next_Reject_Approver=[];
         if(reject_level=='Just Previous'){

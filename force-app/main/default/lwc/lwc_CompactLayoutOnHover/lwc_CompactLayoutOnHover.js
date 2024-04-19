@@ -5,10 +5,12 @@ export default class Lwc_CompactLayoutOnHover extends LightningElement {
     @api selectedrecordId;
     @api objectName;
     @api title;
+    
 
     connectedCallback(){
         debugger;
         console.log('recordId',this.selectedrecordId);
+       
     }
 
     hideModalBox() {  

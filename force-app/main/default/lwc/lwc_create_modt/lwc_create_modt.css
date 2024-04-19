@@ -2,45 +2,13 @@
 	color : black;
 }
 
-.h3 {
-  color: #010b01;
-  background: none;
-  font-weight: bold;
-  font-size: 1rem;
+.blink {
+  background-color:rgba(255, 0, 0, 0.491);
+  box-shadow: rgba(25, 120, 229, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+  
 }
-.mainDiv{
-  box-shadow: rgba(17, 17, 26, 0.1) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 48px;
-  max-height:max-content;
-}
-
-.red-row {
-    background-color:red ;/* Light red color */
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-}
-
-.slds-input {
-    width:0;
-}
-
-.fullWidth{
-  width: 100% !important;
-}
-
-.slds-scrollable_x {
-
-}
-
-.slds-scrollable{
-  min-height: fit-content;
-  max-height: 400px;
-}
-
-.acdetails{
-  max-height:400px;
-}
-
-.slds-backdrop{
-	opacity: 0.3;
+.slds-backdrop-UIClass{
+  opacity:0.5;
   position: absolute; 
   left: 0px; 
   right: 0px; 
@@ -50,4 +18,46 @@
   height: auto; 
   z-index: 999;
   backdrop-filter: blur(15px);
+}
+
+.allrelatedAmountsSpan{
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+}
+
+.amountHeading{
+  font-size: 1rem;
+}
+.amountValues{
+  font-size:large;
+
+}
+
+.borderClass{
+  border: solid;
+}
+
+
+
+.card_main {
+    display: flex;
+}
+
+.details_card {
+    flex: 1;
+    height:9rem;
+    font-weight:600;
+   background-color:#f3f3f3;
+   box-shadow: 10px 10px 5px f3f3f3;
+    
+}
+
+.details_card b {
+    color:#318CE7;
+    font-size:larger;
+    font-weight: bold;
+}
+
+.details_card b {
+    color:#318CE7;
+    font-size:larger;
 }

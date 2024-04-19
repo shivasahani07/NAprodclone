@@ -75,6 +75,7 @@ export default class Lwc_Handledocuments extends NavigationMixin(LightningElemen
     @track today;
     @track documentUploadtaskid;
     @track DocumentUploadOn_DHrecord;
+    @track sharepointurlLink;
 
     @track cssclasslist = ['slds-hint-parent blink', 'slds-hint-parent'];
     @track uploadDocButtonEnableVisibilityStatus = ['Draft', 'Submit For Review', 'Received', 'Uploded'];
@@ -367,15 +368,20 @@ export default class Lwc_Handledocuments extends NavigationMixin(LightningElemen
             this.UploadDocument = false;
             this.DocumentUploadOn_DHrecord = '';
         } else if (buttonlabel == 'UploadDocument') {
-            if (this.checkvalidationForsameFilename(this.docmetaid)) {
-                this.fileuploaddisable = true;
+            if(this.sharepointurlLink!=null && this.sharepointurlLink!=undefined && this.sharepointurlLink!=''){
                 let selectedRecord = this.getDocumentHandlerRecords.find(item => item.Id == this.docmetaid);
                 this.UploadDocumentOnDH(selectedRecord);
-            } else {
-                this.showNotification('ERROR', 'File with Existing FileNames are Not Allowed To Upload', 'error');
                 this.fileuploaddisable = true;
+            }else{
+                if (this.checkvalidationForsameFilename(this.docmetaid)) {
+                    this.fileuploaddisable = true;
+                    let selectedRecord = this.getDocumentHandlerRecords.find(item => item.Id == this.docmetaid);
+                    this.UploadDocumentOnDH(selectedRecord);
+                } else {
+                    this.showNotification('ERROR', 'File with Existing FileNames are Not Allowed To Upload', 'error');
+                    this.fileuploaddisable = true;
+                }
             }
-
         } else if (buttonlabel == 'PreviewDocuments') {
             this.closehighlightbar();
             this.DocumentList = [];
@@ -951,6 +957,15 @@ export default class Lwc_Handledocuments extends NavigationMixin(LightningElemen
                 }
             })
             this.UpsertDHRecords(selectedDhRecord, 'AddMoreAlternativeDocuments');
+        } else if(label == 'UploadSharepointlink'){
+            debugger
+            if (event.target.value != null && event.target.value != undefined && event.target.value != '') {
+                 this.sharepointurlLink=event.target.value;
+                 this.fileuploaddisable=false;
+            }else{
+                 this.fileuploaddisable=true;
+                 this.sharepointurlLink=event.target.value;
+            }
         }
     }
 
@@ -1071,6 +1086,11 @@ export default class Lwc_Handledocuments extends NavigationMixin(LightningElemen
         if (DMSSystem == 'Sharepoint' || contentId.includes(substr) == true) {
             window.open(contentId, '_blank');
         } else if (DMSSystem == 'Salesforce') {
+
+            // const fileId = contentId;
+            // const fileUrl = `/sfc/servlet.shepherd/document/download/${fileId}`;
+            // window.open(fileUrl, '_blank');
+
             this[NavigationMixin.Navigate]({
                 type: 'standard__namedPage',
                 attributes: {
@@ -1086,15 +1106,63 @@ export default class Lwc_Handledocuments extends NavigationMixin(LightningElemen
     //Upload Document Call Apex
     UploadDocumentOnDH(dhrecord) {
         debugger;
-        if (dhrecord.Process_Attribute_Dcoument_Detail__r.DMS_System__c != null || dhrecord.Process_Attribute_Dcoument_Detail__r.DMS_System__c != undefined) {
-            if (dhrecord.Process_Attribute_Dcoument_Detail__r.DMS_System__c == 'Salesforce') {
-                this.storeDocumentInSfsystem(this.fileData);
-            } else if (dhrecord.Process_Attribute_Dcoument_Detail__r.DMS_System__c == 'Sharepoint') {
-                this.storeDocumentInSharePoint(this.fileData);
+        if(this.sharepointurlLink!=null && this.sharepointurlLink!=undefined && this.sharepointurlLink!=''){
+             this.store_typed_sharepointLink(this.sharepointurlLink);
+        }else{
+            if (dhrecord.Process_Attribute_Dcoument_Detail__r.DMS_System__c != null || dhrecord.Process_Attribute_Dcoument_Detail__r.DMS_System__c != undefined) {
+                if (dhrecord.Process_Attribute_Dcoument_Detail__r.DMS_System__c == 'Salesforce') {
+                    this.storeDocumentInSfsystem(this.fileData);
+                } else if (dhrecord.Process_Attribute_Dcoument_Detail__r.DMS_System__c == 'Sharepoint') {
+                    this.storeDocumentInSharePoint(this.fileData);
+                }
+            } else {
+                this.showNotification('Error', 'DMS SYSTEM ID IS NULL & Please Contact Your System Admin', 'error');
             }
-        } else {
-            this.showNotification('Error', 'DMS SYSTEM ID IS NULL & Please Contact Your System Admin', 'error');
         }
+    }
+
+
+    store_typed_sharepointLink(sharepointpath_link){
+        debugger;
+        let fileName=null;
+        UpdateDMSId({ uploadeFilePath: sharepointpath_link, uploadedrecId: this.docmetaid, filename: fileName, uploadedTaskId: this.documentUploadtaskid })
+        .then(res => {
+            if (res != null && res != undefined) {
+                this.sharepointurlLink='';
+                let Array_contentIdRelatedToDocument = this.updatecontentIdRelatedToDocument(this.contentIdRelatedToDocument, res.DocumentIdRelatedToDHId);
+                this.contentIdRelatedToDocument = Array_contentIdRelatedToDocument;
+                this.getDocumentHandlerRecords.find((item) => {
+                    if (item.Id == res.dhrecord.Id) {
+                        item.newuploadedDoc = res.uplodedRecordId;
+                    }
+                    if (item.Id == res.dhrecord.Id) {
+                        item = Object.assign(item, res.dhrecord);
+                    }
+                });
+                this.isChildtask == true ? this.checkDHhandlerVisibityAsperLoginUser() : 'Parent Task';
+                this.checkForButtonsVisibilityAsPerDocumet();
+                this.checkbuttonVisibilityAsPerStatus();
+                this.UploadDocument = false;
+                this.showNotification('SUCCESS', 'Document Uploaded Sucessfully', 'success');
+                this.handleRemove();
+                if(this.docHandlerhistory.length > 0 && res.DocHandlerHistory != null && res.DocHandlerHistory != undefined && res.DocHandlerHistory.length > 0){  
+                    if (res.DocHandlerHistory != null && res.DocHandlerHistory != undefined && res.DocHandlerHistory.length > 0) {
+                        res.DocHandlerHistory.forEach(item => {
+                            if (item && item.Id) {
+                                if (this.docHandlerhistory.find((docitem) => docitem.Id !== item.Id)) {
+                                    this.docHandlerhistory.push(item);
+                                }
+                            }
+                        })
+                    }
+                }else{
+                    this.docHandlerhistory = [...res.DocHandlerHistory];
+                }
+            }
+        })
+        .catch(error => {
+            console.log('error--', error);
+        })
 
     }
 

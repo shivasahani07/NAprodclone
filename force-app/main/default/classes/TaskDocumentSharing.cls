@@ -148,9 +148,12 @@ map_taskid_dhids.put(lv_docsharetaskid,temp_dhids);
             {
                  set<string> s_dhsharingtaskid = new set<string>();
                 if (lv_dh.Document_Sharing_Task_Ids__c != null)
-				   s_dhsharingtaskid.addall(lv_dh.Document_Sharing_Task_Ids__c.split(','));
+                {
+                    s_dhsharingtaskid.addall(lv_dh.Document_Sharing_Task_Ids__c.split(','));
                    s_dhsharingtaskid.remove(null);
                    s_dhsharingtaskid.remove('null');
+                }
+				   
 					
                 system.debug(lv_dh.Current_Task_ID__c);
                 

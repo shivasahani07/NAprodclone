@@ -88,7 +88,7 @@ export default class Lwc_recalibration extends LightningElement {
     SubmitpsRecord(event) {
         debugger;
         this.isSpinner = true;
-        var temppaymentschedule = {...this.paymentschedule,  'Task_Id__c': ''};
+        var temppaymentschedule = {...this.paymentschedule,  'Task_Id__c': '', 'Recalibration_Price_Status__c': 'In Progress'};
         temppaymentschedule.Task_Id__c = this.recId;
         Submitpaymentschedule({ PsRecord: temppaymentschedule })
             .then(result => {

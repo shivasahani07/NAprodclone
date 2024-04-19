@@ -14,11 +14,14 @@ public class API_CreatePaymentScheduleAPI{
            
             String boundary = createboundary();
             PswithJSONwrapper PswithJSONwrapValue = GeneratePsWrapper(TaskRecId);
-           String body = 
+           /*String body = 
             '--' + boundary + '\r\n' +
             'Content-Disposition: form-data; name="ps"\r\n\r\n' +
             PswithJSONwrapValue.PsJSON + '\r\n' + //
-            '--' + boundary + '--\r\n';
+            '--' + boundary + '--\r\n';*/
+            
+
+            String body = PswithJSONwrapValue.PsJSON;
             System.debug('body =====> ' + body);
             HttpRequest request = new HttpRequest();
             
@@ -27,7 +30,8 @@ public class API_CreatePaymentScheduleAPI{
             request.setMethod('POST');
             request.setHeader('API-KEY', apiKey);
             request.setHeader('GROUP-KEY', groupKey);
-            request.setHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
+            //request.setHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
+            request.setHeader('Content-Type', 'application/json');
             request.setHeader('Content-Length', '0');
             request.setBody(body);
             auditwarp.RequestBody = body;
@@ -38,26 +42,34 @@ public class API_CreatePaymentScheduleAPI{
             HttpResponse response = http.send(request);
 
             // Parse and handle the response
-            if (response.getStatusCode() == 200){
-                System.debug('Payment schedule created successfully.');
-                auditwarp.ResponseBody = response.getBody();
-                auditwarp.status = Label.AuditAPIStatus;
-                Map<String, Object> resultMap = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
-                if (resultMap.containsKey('paymentScheduleId')) {
-                    updatePaymentSchedule(String.valueOf(resultMap.get('paymentScheduleId')),  PswithJSONwrapValue.PsRec.Id);
-                    
+            //if(response != null){
+                if (response.getStatusCode() == 200){
+                    System.debug('Payment schedule created successfully.');
+                    auditwarp.ResponseBody = response.getBody();
+                    auditwarp.status = Label.AuditAPIStatus;
+                    Map<String, Object> resultMap = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
+                    if (resultMap.containsKey('paymentScheduleId')) {
+                        updatePaymentSchedule(String.valueOf(resultMap.get('paymentScheduleId')),  PswithJSONwrapValue.PsRec.Id);
+                        
+                    }
+                } else{
+                    System.debug('Failed to create payment schedule. Status code: ' + response.getStatusCode());
+                    System.debug('failed Response Body ====> ' + response.getBody());
+                    auditwarp.ResponseBody = response.getBody();
+                    auditwarp.status = Label.AuditAPIFailedStatus;
+                    Map<String, Object> resultMap = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
+                    if (resultMap.containsKey('paymentScheduleId')) {
+                        updatePaymentSchedule(String.valueOf(resultMap.get('paymentScheduleId')),  PswithJSONwrapValue.PsRec.Id);
+                        
+                    }
                 }
-            } else{
-                System.debug('Failed to create payment schedule. Status code: ' + response.getStatusCode());
-                System.debug('failed Response Body ====> ' + response.getBody());
-                auditwarp.ResponseBody = response.getBody();
-                auditwarp.status = Label.AuditAPIFailedStatus;
-                Map<String, Object> resultMap = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
-                if (resultMap.containsKey('paymentScheduleId')) {
-                    updatePaymentSchedule(String.valueOf(resultMap.get('paymentScheduleId')),  PswithJSONwrapValue.PsRec.Id);
-                    
-                }
-            }
+
+            // }
+            // else if (response == null) {
+            //     auditwarp.ResponseBody = null;
+            //     auditwarp.status = Label.AuditAPIFailedStatus;
+            // }
+            
 
         } catch (Exception e){
             auditwarp.ResponseBody = null;
@@ -118,10 +130,19 @@ public class API_CreatePaymentScheduleAPI{
                         PaymentScheduleWrap.price = prList;
                     }
 
-                    DocHandlerList = [Select Id, Name from Document_Handler__c where Opportunity__c =: TaskRec.whatId];
+                    DocHandlerList = [Select Id, Name, Document_Name__c,DMS_Document_Path__c  from Document_Handler__c where Opportunity__c =: TaskRec.whatId];
+
                     if (DocHandlerList.size() > 0) {
                         for (Document_Handler__c docHand : DocHandlerList) {
-                            
+                            if ( docHand.Document_Name__c != null && docHand.Document_Name__c.contains('Execution Document')) {
+                                PaymentScheduleWrap.executionDocId = docHand.DMS_Document_Path__c;
+                                PaymentScheduleWrap.executedDocTimestamp = String.valueOf(System.now());
+                            }
+                            if ( docHand.Document_Name__c != null && docHand.Document_Name__c.contains('Executed Document')) {
+                                PaymentScheduleWrap.executedDocId = docHand.DMS_Document_Path__c;
+                                PaymentScheduleWrap.executedDocTimestamp = String.valueOf(System.now());
+
+                            }
                         }
                     }
                 }
@@ -176,12 +197,13 @@ public class API_CreatePaymentScheduleAPI{
 
     }
 
-
-
     public class PaymentScheduleWrapper{
         public Long partnerId;
         public String docValidityFrom;
         public String docValidityTill;
+        public String executionDocId;
+        public String executedDocId;
+        public String executedDocTimestamp;
         public Integer pricingStructure;
         public Integer invoiceFrequency;
         public Decimal modelBuildPrice;

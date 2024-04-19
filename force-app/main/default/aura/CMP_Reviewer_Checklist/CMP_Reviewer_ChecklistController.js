@@ -9,6 +9,8 @@
         console.log('child_comp_array',component.get("v.child_comp_array"));
         console.log('Approver_OR_Rejection_array',component.get("v.Approver_OR_Rejection_array"));
         console.log('Opportunity_Related_task',component.get("v.Opportunity_Related_task"));
+        console.log('IsEdit',component.get("v.IsEdit"));
+        
         
         
         var LoginUserRelatedGroup=component.get("v.LoginUserRelatedGroup");
@@ -74,6 +76,7 @@
                                    if(item.index==1){ component.set("v.current_index_value",item.index); first_index_checklist.push(item); }
                             }
                             if(first_index_checklist.length>0){ 
+                                console.log('first_index_checklist',JSON.stringify(first_index_checklist));
                                 component.set("v.index_based_checklist",first_index_checklist); } 
                     })
                     if(checklist_index.length>0){  console.log('checklist_index',checklist_index); component.set("v.options",checklist_index); }
@@ -202,6 +205,7 @@
    },
     handleComments:function(component, event, helper){
         debugger;
+        var IsEdit=component.get("v.IsEdit")
         var checklistIndex_id=event.getSource().get("v.value");
         component.set("v.current_checklistindex_value",checklistIndex_id);
         component.set("v.Isshowcomment",true);
@@ -216,7 +220,7 @@
                if(checklist_reviewer_array.length>0){
                    let all_comments;
                    checklist_reviewer_array.forEach(item=>{
-                       if(item.comments!=null && item.comments!=undefined && item.isEditAllowed==true){
+                       if(item.comments!=null && item.comments!=undefined && (item.isEditAllowed==true || (item.isEditAllowed==false && IsEdit==true))){
                            all_comments= all_comments!=null &&  all_comments!=undefined ? all_comments+ item.comments : item.comments;
                         }
                    })

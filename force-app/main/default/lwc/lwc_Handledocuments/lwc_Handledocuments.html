@@ -211,15 +211,15 @@
 										<div class="slds-align_absolute-center" title="Select">Select</div>
 									</th>
 									<th class="" scope="col" height="22" style="width:1rem">
-										<div class="slds-align_absolute-center" title="Document category">Document
+										<div class="slds-truncate" title="Document category">Document
 											category</div>
 									</th>
 									<th class="" scope="col" height="22" style="width:1rem">
-										<div class="slds-align_absolute-center" title="Document Name">Document Name
+										<div class="slds-truncate" title="Document Name">Document Name
 										</div>
 									</th>
 									<th class="" scope="col" height="22" style="width:1rem">
-										<div class="slds-align_absolute-center" title="Description">Description</div>
+										<div class="slds-truncate" title="Description">Description</div>
 									</th>
 								</thead>
 								<tbody>
@@ -233,16 +233,16 @@
 												</div>
 											</td>
 											<td data-label="Document category">
-												<div class="slds-align_absolute-center">
+												<div class="">
 													{record.Document_Metadata__r.Document_Category__c}</div>
 											</td>
 											<td data-label="Document Name">
-												<div class="slds-align_absolute-center">
+												<div class="">
 													{record.Document_Metadata__r.Document_Name__c}</div>
 											</td>
 											<td data-label="Description">
-												<div class="slds-align_absolute-center">
-													{record.Description__c}</div>
+												<div class="" style="white-space:pre-wrap;">
+													{record.Document_Metadata__r.Description__c}</div>
 											</td>
 										</tr>
 									</template>
@@ -312,6 +312,7 @@
 					<div class="slds-grid slds-gutters">
 						<div class="slds-col">
 							<span>
+								<span class="slds-notify slds-notify_alert" role="alert">File Size Less Than 3MB Upload File</span>
 									<lightning-input data-label="UploadDocument" type="file"
 										accept=".xlsx, .xls, .csv, .png, .doc, .docx, .pdf" label="" onchange={openfileUpload}>
 									</lightning-input>
@@ -324,19 +325,27 @@
 						</div>
 						<div class="slds-col">
 							<span>
-							  <br></br>
-								<template if:true={DocumentUploadOn_DHrecord}>
-									<div class="slds-grid slds-wrap">
-                                        <template if:true={DocumentUploadOn_DHrecord.isshowInfo}>
-											<lightning-helptext content="You Can't add  Alternative Document This Document is Mandatory"></lightning-helptext>
-										 </template>
-										&nbsp;&nbsp;&nbsp;<lightning-input type="checkbox" data-label="AlternateDocumentUpload" 
-											  label="Alternative Document" name="input1" onchange={HandleChange} 
-												 data-id={DocumentUploadOn_DHrecord.Id} checked={DocumentUploadOn_DHrecord.Is_Alternate_Document_Uploded__c}
-												 disabled={DocumentUploadOn_DHrecord.isdisable_Alternatedocument}></lightning-input>
-									</div>
-								</template>
+								<span class="slds-notify slds-notify_alert" role="alert">File Size More Than or Equals 3MB Provide Sharepoint URL</span>
+								<lightning-textarea name="input3" data-label="UploadSharepointlink" label="" placeholder="type Sharepoint URL here..." onchange={HandleChange} value={sharepointurlLink}></lightning-textarea>
 						  </span>
+						</div>
+					</div>
+					<div class="slds-grid slds-gutters">
+						<div class="slds-col">
+							<span>
+								<br></br>
+								  <template if:true={DocumentUploadOn_DHrecord}>
+									  <div class="slds-grid slds-wrap">
+										  <template if:true={DocumentUploadOn_DHrecord.isshowInfo}>
+											  <lightning-helptext content="You Can't add  Alternative Document This Document is Mandatory"></lightning-helptext>
+										   </template>
+										  &nbsp;&nbsp;&nbsp;<lightning-input type="checkbox" data-label="AlternateDocumentUpload" 
+												label="Alternative Document" name="input1" onchange={HandleChange} 
+												   data-id={DocumentUploadOn_DHrecord.Id} checked={DocumentUploadOn_DHrecord.Is_Alternate_Document_Uploded__c}
+												   disabled={DocumentUploadOn_DHrecord.isdisable_Alternatedocument}></lightning-input>
+									  </div>
+								  </template>
+							</span>
 						</div>
 					</div>
 

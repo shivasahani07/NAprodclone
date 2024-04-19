@@ -47,7 +47,7 @@
             });
              obj_finalchecklist.taskOwnerName=tkrecord.Owner.Name;
         }
-         console.log('taskId_related_fact',taskId_related_fact);
+         console.log('taskId_related_fact',JSON.stringify(taskId_related_fact));
         
         if(reviewer_list.length>0){
             reviewer_list.forEach((element)=>{
@@ -99,8 +99,11 @@
                     }
             })
             //Assign Task Id as Per Checklist Detail
+            console.log('taskId_related_fact Before Assigning Values',JSON.stringify(taskId_related_fact));
             taskId_related_fact.forEach((element)=>{
+                   
                     if(element && element.Process_Review_Checklist_Detail__r.Checklist_Name__c && element.Task_ID__c){
+                        console.log('element',JSON.stringify(element));
                         if(final_checklist.length>0){
                             final_checklist.forEach((item)=>{
                                     if(item.checklistName==element.Process_Review_Checklist_Detail__r.Checklist_Name__c){
@@ -114,7 +117,9 @@
                                                             rv_item.checklistfactId=element.Id;
                                                             rv_item.review_related_taskid=element.Review_Related_TaskId__c;
                                                             rv_item.Selected=element.Checklist_Reviewer_value__c;
-                                                            rv_item.comments=element.Comments__c
+                                                            rv_item.comments=element.Comments__c;
+                                                            rv_item.last_Commented_Date_On_Fact=element.Last_Commented_Date__c;
+                                                            rv_item.last_task_reopen_date=task_rec.Last_Open_Date__c;
                                                             if(rv_item.reviewerId.startsWith('005')){
                                                                  rv_item.isEditAllowed =rv_item.reviewerId==userId?true:false
                                                             }else if(rv_item.reviewerId.startsWith('00G') && LoginUserRelatedGroup!=null && LoginUserRelatedGroup!=undefined && LoginUserRelatedGroup.length>0){
@@ -188,9 +193,10 @@
                     }
                     component.set("v.Isshowcomment",false)
                 }
-            }else{
-                  
             }
+			else if(state=='ERROR'){
+              
+            }            
         });  
         $A.enqueueAction(action);
     },
@@ -243,6 +249,10 @@
     },
     addComment_basisOf_Checklist:function(component, event, helper,cheklistFact_records) {
         debugger;
+        
+        var currentDatetime = new Date();
+        var formattedDatetime = currentDatetime.toISOString()
+        
         let currentUserName      =component.get("v.currentUserName");
         const date               = new Date();
         let Process_fact_array   =[];
@@ -252,7 +262,7 @@
         if(cheklistFact_records.length>0){
             let comment_processfact=(new Date(date.toISOString()).toLocaleString(undefined, {timeZone: 'Asia/Kolkata'})) + "   [" + currentUserName + "] - " + comments + '\n' ;
              cheklistFact_records.forEach((item)=>{ 
-                 let process_fact_object  ={Id:null,Checklist_Reviewer_value__c:false,Comments__c:null};                 
+                 let process_fact_object  ={Id:null,Checklist_Reviewer_value__c:false,Comments__c:null,Last_Commented_Date__c:null};                 
                      if(item){
                          process_fact_object.Id=item.checklistfactId;
                          process_fact_object.Checklist_Reviewer_value__c=item.Selected;
@@ -261,6 +271,9 @@
                          }else{
                              process_fact_object.Comments__c= comment_processfact + '\n'  
                          } 
+                         if(item.isEditAllowed){
+                             process_fact_object.Last_Commented_Date__c=formattedDatetime;
+                         }
                          Process_fact_array.push(process_fact_object);
                      }
              })
@@ -280,6 +293,7 @@
                     item.v_checklists[checklistIndex_id].checklist_reviewer_array.forEach((c_item)=>{
                         if(c_item){
                             c_item.Issessioncommentavailable=true;
+                            
                         }
                     })
                 }

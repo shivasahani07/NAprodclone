@@ -10,6 +10,7 @@
     <aura:Attribute name="userList" type="List"/>
     <aura:Attribute name="QueueList" type="List"/>
     <aura:attribute name="ChildTaskOwnerName" type="List" />
+    <aura:attribute name="IsEdit" type="Boolean" default="false"/>
     
     <aura:Attribute name="Selected_task_checklist" type="List"/>
     <aura:Attribute name="CheckList_Fact" type="List"/>

@@ -60,6 +60,7 @@ export default class Lwc_hocument_handedover extends LightningElement {
                         isCommentVisible: false,
                         isDocumentRequired: false,
                         Task_Id__c:document.Task_Id__c,
+                        isdocument_closed:false
                     };
                 } else if (modt) {
                     return {
@@ -70,7 +71,8 @@ export default class Lwc_hocument_handedover extends LightningElement {
                         isCommentVisible: false,
                         executed_on_date: modt.Date_Of_Execution__c,
                         Task_Id__c:document.Task_Id__c,
-                        excecution_place: `${modt.Place__c.street}, ${modt.Place__c.state}, ${modt.Place__c.country}`
+                        excecution_place: `${modt.Place__c.street}, ${modt.Place__c.state}, ${modt.Place__c.country}`,
+                        isdocument_closed:false
                     };
                 } else {
                     return document;
@@ -89,9 +91,6 @@ export default class Lwc_hocument_handedover extends LightningElement {
         }
     }
     
-
-
-
     get options() {
         return [
             { label: 'Handed Over Successfully', value: 'Handed Over Successfully' },
@@ -127,8 +126,6 @@ export default class Lwc_hocument_handedover extends LightningElement {
 
         this.maskeddatalist = tempList;
         this.updatedeWithStatsDocumentsList = tempList;
-
-
         console.log(`Updated ${updatedStatusCount} records with new status.`);
         console.log(`Updated ${updatedVisibilityCount} records with visibility change.`);
     }
@@ -155,7 +152,8 @@ export default class Lwc_hocument_handedover extends LightningElement {
         debugger;
         let cuurentComment = event.target.value;
         let SelectedDocId = event.target.dataset.id;
-        let tempList = this.updatedeWithStatsDocumentsList;
+        let tempList = this.maskeddatalist;
+        //let tempList = this.updatedeWithStatsDocumentsList;
         tempList.forEach(category => {
             console.log('Category:', category.category);
             category.documents.forEach(document => {
@@ -165,7 +163,7 @@ export default class Lwc_hocument_handedover extends LightningElement {
 
             });
         });
-
+        this.maskeddatalist=tempList;
         this.updatedeWithStatsDocumentsList = tempList
     }
 
@@ -257,7 +255,7 @@ export default class Lwc_hocument_handedover extends LightningElement {
         debugger;
         let tempDocumentObjectList = [];
         //if (confirm("are you sure do want to submit!") == true) {
-            this.updatedeWithStatsDocumentsList.forEach(category => {
+            this.maskeddatalist.forEach(category => {
                 console.log('Category:', category.category);
                 category.documents.forEach(document => {
                     let tempDocumentObject = {};
@@ -265,11 +263,14 @@ export default class Lwc_hocument_handedover extends LightningElement {
                     tempDocumentObject.Status__c = document.status;
                     tempDocumentObject.Comment_History__c = document.comment!==undefined || document.comment!==null?document.comment:null;
                     tempDocumentObject.Sub_Status__c= document.Sub_Status__c!==undefined || document.Sub_Status__c!==null?document.Sub_Status__c:null;
+                    tempDocumentObject.isdocument_closed=document.isdocument_closed;
                     tempDocumentObjectList.push(tempDocumentObject);
-
                 });
             });
             if(this.checkValidationBeforeUpdate(tempDocumentObjectList)){
+                tempDocumentObjectList.forEach((item)=>{
+                    delete item.isdocument_closed;
+                })
                 updateDocumentRecord({ docTobeUpdated: tempDocumentObjectList })
                 .then(response => {
                    // alert('done---');
@@ -279,14 +280,7 @@ export default class Lwc_hocument_handedover extends LightningElement {
                    // alert('error---');
                     console.error('An error occurred:', error.body.message);
                 });
-            }else{
-                const event = new ShowToastEvent({
-                title: 'Alert',
-                message: 'Sub Status Is Mandatory',
-                variant: 'warning',
-                });
-                this.dispatchEvent(event);
-                
+            }else{   
             }
         // } else {
         //     return;
@@ -300,8 +294,24 @@ export default class Lwc_hocument_handedover extends LightningElement {
         if(tempDocumentObjectList.length>0){
             tempDocumentObjectList.forEach((item)=>{
                 if(shouldskip){return}
-                if(item.Status__c == 'Request Cancellation' && (item.Sub_Status__c==null || item.Sub_Status__c==undefined || item.Sub_Status__c=='')){
-                 shouldskip=true
+                if(item.Status__c == 'Request Cancellation' && (item.Sub_Status__c!=null && item.Sub_Status__c!=undefined && item.Sub_Status__c!='')){
+                      if(item.Status__c == 'Request Cancellation' && item.Sub_Status__c && item.isdocument_closed==false){
+                        shouldskip=true;
+                            const event = new ShowToastEvent({
+                                title: 'Alert',
+                                message: 'Document Upload is Mandatory',
+                                variant: 'warning',
+                                });
+                            this.dispatchEvent(event);
+                      }
+                }else{
+                    shouldskip=true;
+                    const event = new ShowToastEvent({
+                        title: 'Alert',
+                        message: 'Sub Status Is Mandatory',
+                        variant: 'warning',
+                        });
+                    this.dispatchEvent(event);
                 }
             })
         }
@@ -337,6 +347,30 @@ export default class Lwc_hocument_handedover extends LightningElement {
     backTomodt(event){
         debugger;
         this.isShowMODTCOMP = false;
+    }
+
+    callDocumentHandlerFinalSubmit() {
+        debugger;
+        let child = this.template.querySelector('c-lwc_-handledocuments');
+        child.HandleSavefromAura();
+    }
+
+     closeMODT(event) {
+        debugger;
+        let index = event.detail.index;
+        let recordId = event.detail.extendedsobjId;
+        let isDocumentClosed = event.detail.child_isclosed;
+        if (isDocumentClosed) {
+            this.maskeddatalist.forEach(category => {
+                category.documents.forEach(document => {
+                    if(document.index==index){
+                        document.isdocument_closed=isDocumentClosed;
+                    }
+                })
+            })
+        } else {
+           // this.handleHighlightRow(this.maskeddatalist,index);  
+        }
     }
 
 }

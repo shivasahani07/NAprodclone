@@ -82,6 +82,7 @@ public without sharing class paymentscheduleController {
     public static Payment_Schedule__c Submitpaymentschedule(Payment_Schedule__c PsRecord){
         System.debug('PsRecord ====> ' + PsRecord);
         //PsRecord.Task_Id__c = String.valueOf(PsRecord.Task_Id__c);
+        //PsRecord.Recalibration_Price_Status__c = 'In Progress';
         upsert PsRecord;
         return PsRecord;
     }

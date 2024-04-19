@@ -6,10 +6,19 @@ public class SendPayableDetailsToCustomer {
         List<Document_Handler__c> docHandlerList 	= new List<Document_Handler__c>();
         List<Paybale__c> payableList 				= new List<Paybale__c>();
         List<Document_Handler__c> docHanlderTobeUpdate = new List<Document_Handler__c>();
+        List<IDFC_Payout_Metadata__mdt> payoutMetaDataList = new List<IDFC_Payout_Metadata__mdt>();
+        Map<String,String> mapOfCompareValueByResultValue = new Map<String,String>();
         AuditResponseWrapperClass auditResponse = new AuditResponseWrapperClass();
         auditResponse.auditRec = new API_Callout_Audit__c();
         try{
             Id dependantTaskRecordId = [select Id,Execution_Depended_Closed_Task_Ids__c,Parent_Task_Id__c from Task where Id =: taskRecordId].Parent_Task_Id__c;
+            payoutMetaDataList = [SELECT Id,Compare_Value__c,Matching_Type__c from IDFC_Payout_Metadata__mdt];
+            
+            if(!payoutMetaDataList.isEMpty()){
+                for(IDFC_Payout_Metadata__mdt idfcPayout : payoutMetaDataList){
+                    mapOfCompareValueByResultValue.put(idfcPayout.Compare_Value__c,idfcPayout.Matching_Type__c);
+                }
+            }
             //ID nextDependantTaskId = [select Id,Execution_Depended_on_Task_Ids__c from task where Parent_Task_Id__c =: taskRecordId].Id;
             system.debug('dependantTaskRecordId::'+dependantTaskRecordId);
             Set<Id> payableIdSet = new Set<Id>();
@@ -17,7 +26,7 @@ public class SendPayableDetailsToCustomer {
             system.debug('docHandlerList::'+taskRecordId);
             
             payableList		= [SELECT Id,Value_Date__c,Amount__C,Financial_Entity_A_C_Details__c,Financial_Entity_A_C_Details__r.Bank_Account_Number__c,
-                               Financial_Entity_A_C_Details__r.Banking_Account_Name__c,Financial_Entity_A_C_Details__r.IFSC_Code__c,Mode__c,Task_Id__c	  
+                               Financial_Entity_A_C_Details__r.Banking_Account_Name__c,Financial_Entity_A_C_Details__r.IFSC_Code__c,Mode__c,Task_Id__c,Financial_Entity_A_C_Details__r.Bank_Account_Type__c	  
                                FROM Paybale__c 
                                Where Task_Id__c =: dependantTaskRecordId];
             
@@ -47,10 +56,42 @@ public class SendPayableDetailsToCustomer {
                     if(payRec.Financial_Entity_A_C_Details__r.Banking_Account_Name__c == null){
                         payRec.Financial_Entity_A_C_Details__r.Banking_Account_Name__c = '';
                     }
+                    String clientCode = 'NACL';
+                    String transactionTypeCode = 'CC';
+                    String paymentType = '';
+                    String purposeCode = '';
+                    String accountType = '';
+                    String deliveryMode = 'BP';
+                    String transactionType = 'INR';
+                    if(!mapOfCompareValueByResultValue.isEMpty()){
+                        if(mapOfCompareValueByResultValue.containsKey('NACL')){
+                            clientCode = mapOfCompareValueByResultValue.get('NACL');
+                        }
+                        
+                        if(mapOfCompareValueByResultValue.containsKey(payRec.Mode__c)){
+                            transactionTypeCode = mapOfCompareValueByResultValue.get(payRec.Mode__c);
+                        }
+                        
+                        if(mapOfCompareValueByResultValue.containsKey(payRec.Mode__c)){
+                            paymentType = mapOfCompareValueByResultValue.get(payRec.Mode__c);//Validate
+                        }
+                        
+                        if(mapOfCompareValueByResultValue.containsKey(payRec.Mode__c)){
+                            purposeCode = mapOfCompareValueByResultValue.get(payRec.Mode__c);//Validate
+                        }
+                        
+                        if(mapOfCompareValueByResultValue.containsKey(payRec.Financial_Entity_A_C_Details__r.Bank_Account_Type__c)){
+                            accountType = mapOfCompareValueByResultValue.get(payRec.Financial_Entity_A_C_Details__r.Bank_Account_Type__c);
+                        }
+                        
+                        
+                         
+                    }
                     
-                    csvContent += '"' + 'NACL'.escapeCsv() + '","' +
+                    
+                    csvContent += '"' + String.valueOf(clientCode).escapeCsv() + '","' +
                         String.valueOf(payRec.Financial_Entity_A_C_Details__r.Bank_Account_Number__c).escapeCsv() + '","' +
-                        'CC'.escapeCsv() + '","' +
+                        String.valueOf(transactionTypeCode).escapeCsv() + '","' +
                         String.valueOf(payRec.Value_Date__c).escapeCsv() + '","' +
                         String.ValueOf(payRec.Amount__c).escapeCsv() + '","' +
                         payRec.Financial_Entity_A_C_Details__r.Banking_Account_Name__c.escapeCsv() + '","' +
@@ -61,12 +102,12 @@ public class SendPayableDetailsToCustomer {
                         + '","' + // beneficary Mobile No.
                         + '","' + // Remarks
                         String.valueOf(payRec.Mode__C.escapeCsv())  + '","' +
-                        String.valueOf('CMS'.escapeCsv())  + '","' +
-                        String.valueOf('BENE Account Type'.escapeCsv())  + '","' + // Beneficary Account Type
+                        String.valueOf(purposeCode).escapeCsv()  + '","' +
+                        String.valueOf(accountType).escapeCsv() + '","' + // Beneficary Account Type
                         + '","' + // Payable Location
                         + '","' + // Print Branch Name
-                        String.valueOf('BP'.escapeCsv())  + '","' +
-                        String.valueOf('INR'.escapeCsv())  + '","' +//Transaction Currency
+                        String.valueOf(deliveryMode).escapeCsv()  + '","' +
+                        String.valueOf(transactionType).escapeCsv()  + '","' +//Transaction Currency
                         + '","' + // Instrument Number
                         + '","' + // RBI/UTI Number
                         + '","' + // BENE_ADD1
