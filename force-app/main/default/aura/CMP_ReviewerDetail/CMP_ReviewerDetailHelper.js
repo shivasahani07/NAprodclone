@@ -522,5 +522,40 @@
                  this.passcomponent_status_to_Parent(component, event, helper,index,true);
             }
         }
-   }                             
+   },
+    checkvalidation_reviewtaskIds_onFact:function(component,event,helper){
+       debugger;
+       var shouldskip=false;
+       var Opportunity_Related_task = component.get("v.Opportunity_Related_task");
+       var CheckList_Fact=component.get("v.CheckList_Fact");
+        if(CheckList_Fact!=null && CheckList_Fact!=undefined && CheckList_Fact.length>0){
+            CheckList_Fact.forEach((fact_item)=>{ 
+                if(fact_item.Id!=null && fact_item.Review_Related_TaskId__c!=null && fact_item.Review_Related_TaskId__c!=undefined){
+                    if(shouldskip){return}
+                    let reviewrelated_task = Opportunity_Related_task.find((item)=>item.Id==fact_item.Review_Related_TaskId__c);
+                    if(reviewrelated_task!=null && reviewrelated_task!=undefined){
+                        if(reviewrelated_task.Status=='Completed'){
+                            shouldskip = false;
+                        }else if(reviewrelated_task.Status!='Completed'){
+                            shouldskip = true; 
+                            this.showWarning(component, event, helper,'Please Close The '+reviewrelated_task.Subject+' Task Before Procedding To Submit For Review');
+                        }
+                    }
+                }     
+            })
+         }
+      return  shouldskip==true?false:true;                                                              
+  },
+  showWarning : function(component, event, helper,message) {
+        var toastEvent = $A.get("e.force:showToast");
+        toastEvent.setParams({
+            title : 'Error',
+            message: message,
+            duration:' 5000',
+            key: 'info_alt',
+            type: 'error',
+            mode: 'sticky'
+        });
+        toastEvent.fire();
+    }                                                                   
 })

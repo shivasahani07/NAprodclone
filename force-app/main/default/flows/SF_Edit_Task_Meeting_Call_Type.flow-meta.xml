@@ -204,6 +204,20 @@
                 <elementReference>Get_Task_Details.OwnerId</elementReference>
             </value>
         </assignmentItems>
+        <assignmentItems>
+            <assignToReference>rv_Task_io.Process_Attribute__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Task_Details.Process_Attribute__c</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>rv_Task_io.Process_Path_Task_Detail__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Task_Details.Process_Path_Task_Detail__c</elementReference>
+            </value>
+        </assignmentItems>
         <connector>
             <targetReference>Task_Detials</targetReference>
         </connector>

@@ -275,13 +275,24 @@
        debugger;
         var isRejectavailable=false;
         var taskRec=component.get("v.taskRec");
+        var CheckList_Fact=component.get("v.CheckList_Fact");
         var ChildTaskOwnerName=component.get("v.ChildTaskOwnerName");
         if(ChildTaskOwnerName.find((item)=>item.Status=='Rejected')){
             isRejectavailable=true
         }
         if(taskRec.Id!=null && taskRec.Status=='Open' && ChildTaskOwnerName.length>0 && isRejectavailable==true){
-             var targetMethod = component.get('c.checkCreatorLevel_ApproverList')
-             $A.enqueueAction(targetMethod); 
+            
+            if(CheckList_Fact!=null && CheckList_Fact!=undefined && CheckList_Fact.length>0){
+                 var v_ReviewtaskIds_Statusclosed_Related_to_fact=helper.checkvalidation_reviewtaskIds_onFact(component,event,helper);
+                    if(v_ReviewtaskIds_Statusclosed_Related_to_fact){
+                         var targetMethod = component.get('c.checkCreatorLevel_ApproverList')
+                         $A.enqueueAction(targetMethod);  
+                    }
+            }else{
+                 var targetMethod = component.get('c.checkCreatorLevel_ApproverList')
+                 $A.enqueueAction(targetMethod);
+            }
+                 
         }else{
             helper.senddata_toParent_task(component, event, helper);  
         }
@@ -497,34 +508,36 @@
         var finalUserIds=component.get("v.finalUserIds");
         var getReviewerRecord_level_0=ReviewerList.find((item)=>item.Level__c==0);
         console.log('getReviewerRecord_level_0',getReviewerRecord_level_0);
-        
-        if(getReviewerRecord_level_0!=null && getReviewerRecord_level_0!=undefined && getReviewerRecord_level_0.Approve_Level_Allowed__c!=null && getReviewerRecord_level_0.Approve_Level_Allowed__c!=undefined){
-            if(getReviewerRecord_level_0.Approve_Level_Allowed__c=='Next Level'){
-                nextLevel_ReviewRecord=ReviewerList.find((item)=>item.Process_Attribute_Review_Detail__c==getReviewerRecord_level_0.Id && item.Level__c==1);
-                if(nextLevel_ReviewRecord!=null && nextLevel_ReviewRecord!=undefined){
-                    let childTask_relatedTo_nextLevel_ReviewRecord=ChildTaskOwnerName.find((item)=>item.Process_Attribute_Review_Detail__c==nextLevel_ReviewRecord.Id);
-                    if(childTask_relatedTo_nextLevel_ReviewRecord!=null && childTask_relatedTo_nextLevel_ReviewRecord!=undefined && childTask_relatedTo_nextLevel_ReviewRecord.Id){
-                        finalUserIds.push(childTask_relatedTo_nextLevel_ReviewRecord.OwnerId);
+        //var v_ReviewtaskIds_Statusclosed_Related_to_fact=helper.checkvalidation_reviewtaskIds_onFact(component,event,helper);
+        //if(v_ReviewtaskIds_Statusclosed_Related_to_fact){
+            if(getReviewerRecord_level_0!=null && getReviewerRecord_level_0!=undefined && getReviewerRecord_level_0.Approve_Level_Allowed__c!=null && getReviewerRecord_level_0.Approve_Level_Allowed__c!=undefined){
+                if(getReviewerRecord_level_0.Approve_Level_Allowed__c=='Next Level'){
+                    nextLevel_ReviewRecord=ReviewerList.find((item)=>item.Process_Attribute_Review_Detail__c==getReviewerRecord_level_0.Id && item.Level__c==1);
+                    if(nextLevel_ReviewRecord!=null && nextLevel_ReviewRecord!=undefined){
+                        let childTask_relatedTo_nextLevel_ReviewRecord=ChildTaskOwnerName.find((item)=>item.Process_Attribute_Review_Detail__c==nextLevel_ReviewRecord.Id);
+                        if(childTask_relatedTo_nextLevel_ReviewRecord!=null && childTask_relatedTo_nextLevel_ReviewRecord!=undefined && childTask_relatedTo_nextLevel_ReviewRecord.Id){
+                            finalUserIds.push(childTask_relatedTo_nextLevel_ReviewRecord.OwnerId);
+                        }
+                    }
+                }else if(getReviewerRecord_level_0.Approve_Level_Allowed__c=='Current Reject Level'){
+                    let childTask_relatedTo_current_Reject_level=ChildTaskOwnerName.find((item)=>item.Status=='Rejected');
+                    finalUserIds.push(childTask_relatedTo_current_Reject_level.OwnerId);
+                }
+            }
+            component.set("v.finalUserIds",finalUserIds);
+            let Insert_tasklist=helper.Prepare_data_for_Review(component, event, helper);
+            helper.fetchData(component, event, helper,Insert_tasklist,'Submited For Review',function(result, error) {
+                debugger;
+                if (error) {
+                    console.error(error);
+                } else {
+                    console.log(result);
+                    if(result.Id != undefined){
+                        helper.senddata_toParent_task(component, event, helper); 
+                        location.reload(); 
                     }
                 }
-            }else if(getReviewerRecord_level_0.Approve_Level_Allowed__c=='Current Reject Level'){
-                let childTask_relatedTo_current_Reject_level=ChildTaskOwnerName.find((item)=>item.Status=='Rejected');
-                finalUserIds.push(childTask_relatedTo_current_Reject_level.OwnerId);
-            }
-        }
-        component.set("v.finalUserIds",finalUserIds);
-        let Insert_tasklist=helper.Prepare_data_for_Review(component, event, helper);
-        helper.fetchData(component, event, helper,Insert_tasklist,'Submited For Review',function(result, error) {
-            debugger;
-            if (error) {
-                console.error(error);
-            } else {
-                console.log(result);
-                if(result.Id != undefined){
-                    helper.senddata_toParent_task(component, event, helper); 
-                   location.reload(); 
-                }
-            }
-        });                                
+            });                                
+       // }  
     }      
 })

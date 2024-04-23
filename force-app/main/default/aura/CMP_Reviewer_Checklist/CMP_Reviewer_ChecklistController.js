@@ -14,13 +14,11 @@
         
         
         var LoginUserRelatedGroup=component.get("v.LoginUserRelatedGroup");
-        
         var ReviewerList = component.get("v.ReviewerList");
         var Reviewer_thread_Id = component.get("v.Reviewer_thread_Id");
         var child_comp_array = component.get("v.child_comp_array");
         var Approver_OR_Rejection_array = component.get("v.Approver_OR_Rejection_array");
         var multiple_reviewer_checklist=[];
-        
         var prepare_thread_related=[];
         
         if(child_comp_array.length>0){
@@ -40,10 +38,8 @@
  
          if(child_comp_array!=null && child_comp_array!=undefined && child_comp_array.length>0){
             for(let i=0;i<child_comp_array.length;i++){
-                if(child_comp_array[i]){
-                    
+                if(child_comp_array[i]){  
                    let createed_checklist_obj=helper.prepareChecklist_data(component, event, helper,child_comp_array[i],i+1); 
-                    
                     if(createed_checklist_obj && Approver_OR_Rejection_array.length>0){
                         let getReviewerlist=Approver_OR_Rejection_array.find((rv_item)=>{
                             if(rv_item.rv_taskId==createed_checklist_obj.v_taskId){
@@ -145,7 +141,7 @@
 
             if(index_based_checklist.length>0){ 
                 index_based_checklist.forEach((item)=>{ 
-                    v_ReviewtaskIds_Statusclosed = helper.checkselectedRelatedtask_Status(component, event, helper,item.v_checklists);
+                    //v_ReviewtaskIds_Statusclosed = helper.checkselectedRelatedtask_Status(component, event, helper,item.v_checklists);
                     v_isChecklistValidtionSuccess = helper.checklistValidation_onSubmitForReview(component, event, helper,item.v_checklists);
                         if(v_isChecklistValidtionSuccess){
                                     if(Is_Approve_review==true && Is_Reject_review==false){
@@ -161,7 +157,7 @@
                })
             } 
         console.log('finalUserIds',finalUserIds);
-        if(v_ReviewtaskIds_Statusclosed){return component.set("v.disablesubmitforReview",false);};
+        //if(v_ReviewtaskIds_Statusclosed){return component.set("v.disablesubmitforReview",false);};
         if(finalUserIds.length>0 && v_isChecklistValidtionSuccess==true){
             var compEvent = component.getEvent("childToParentCommunicationEvent");
             compEvent.setParams({

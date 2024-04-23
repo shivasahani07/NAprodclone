@@ -331,17 +331,17 @@ public without sharing class lwc_Handledocuments_Controller {
             }
             System.debug('ownerId--'+ownerId);
             List<Task> rec = [Select Id,process_Attribute__c From Task Where Review_Record_Id__c=:DHRecord.Id];
-            
+            List<Task> Taskrecord= DHRecord.Task_Id__c!=null ? [Select Id,Subject,process_Attribute__c,whatId From Task Where Id=:DHRecord.Task_Id__c]:null;
             System.debug('rec--'+rec);
             Task ts = new Task();
             ts.Id = rec.size()>0?rec[0].Id:null;
             ts.Parent_Task_Id__c=DHRecord.Task_Id__c;
             ts.OwnerId=ownerId;
-            ts.subject=DHRecord.Task_Id__c!=null ? 'Review - '+[Select Id,Subject From Task Where Id=:DHRecord.Task_Id__c].Subject : 'Review Task';
+            ts.subject=DHRecord.Task_Id__c!=null && Taskrecord.size()>0 ? 'Review - '+Taskrecord[0].Subject : 'Review Task';
             ts.Review_Record_Id__c=DHRecord.Id;
             ts.status='Submited For Review';
-            ts.process_Attribute__c=DHRecord.Task_Id__c!=null ? [Select Id,Subject,process_Attribute__c From Task Where Id=:DHRecord.Task_Id__c].process_Attribute__c : null;
-            ts.whatId=[Select Id,Subject,whatId From Task Where Id=:DHRecord.Task_Id__c].whatId;
+            ts.process_Attribute__c=DHRecord.Task_Id__c!=null &&  Taskrecord.size()>0 ? Taskrecord[0].process_Attribute__c : null;
+            ts.whatId=DHRecord.Task_Id__c!=null &&  Taskrecord.size()>0 ? Taskrecord[0].whatId : null;
             Upsert ts;
             DHRecord.Status__c='Submited For Review';
             update DHRecord;

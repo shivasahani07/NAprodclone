@@ -4,7 +4,7 @@
         <name>NavigateTorecord</name>
         <label>NavigateTorecord</label>
         <locationX>710</locationX>
-        <locationY>1790</locationY>
+        <locationY>2198</locationY>
         <actionName>c:NavigateTorecord</actionName>
         <actionType>component</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -53,7 +53,7 @@
             </value>
         </assignmentItems>
         <connector>
-            <targetReference>Create_Lead_Task</targetReference>
+            <targetReference>Get_Process_path_Task_Details</targetReference>
         </connector>
     </assignments>
     <assignments>
@@ -117,8 +117,22 @@
                 <elementReference>fv_Task_Due_Date</elementReference>
             </value>
         </assignmentItems>
+        <assignmentItems>
+            <assignToReference>rv_New_Task.Process_Attribute__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>rv_Lead_io.Process_Attribute__c</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>rv_New_Task.OwnerId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>rv_Lead_io.OwnerId</elementReference>
+            </value>
+        </assignmentItems>
         <connector>
-            <targetReference>Create_Lead_Task</targetReference>
+            <targetReference>Get_Process_path_Task_Details</targetReference>
         </connector>
     </assignments>
     <assignments>
@@ -193,7 +207,7 @@
         <name>Assign_New_Task_To_Task_I_O</name>
         <label>Assign New Task To Task I/O</label>
         <locationX>490</locationX>
-        <locationY>2090</locationY>
+        <locationY>2498</locationY>
         <assignmentItems>
             <assignToReference>v_trigger_Object_Name</assignToReference>
             <operator>Assign</operator>
@@ -225,7 +239,7 @@
         <name>Assign_Subject_Follow_Up</name>
         <label>Assign Subject Follow Up</label>
         <locationX>270</locationX>
-        <locationY>1790</locationY>
+        <locationY>2198</locationY>
         <assignmentItems>
             <assignToReference>rv_New_Task.Subject</assignToReference>
             <operator>Assign</operator>
@@ -353,6 +367,22 @@
             <targetReference>Create_Follow_Up_Task</targetReference>
         </connector>
     </assignments>
+    <assignments>
+        <name>Assign_Task_Process_Attributes</name>
+        <label>Assign Task Process Attributes</label>
+        <locationX>358</locationX>
+        <locationY>1490</locationY>
+        <assignmentItems>
+            <assignToReference>rv_New_Task.Process_Path_Task_Detail__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Process_path_Task_Details.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Create_Lead_Task</targetReference>
+        </connector>
+    </assignments>
     <choices>
         <name>Const_Account</name>
         <choiceText>Account</choiceText>
@@ -431,6 +461,38 @@
         </rules>
     </decisions>
     <decisions>
+        <name>Check_Process_path_Task_Details</name>
+        <label>Check Process path Task Details</label>
+        <locationX>490</locationX>
+        <locationY>1382</locationY>
+        <defaultConnector>
+            <targetReference>Create_Lead_Task</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Process_path_Task_Details_Outcome</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Process_path_Task_Details</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>rv_New_Task.Process_Path_Task_Detail__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Task_Process_Attributes</targetReference>
+            </connector>
+            <label>Process path Task Details - Outcome</label>
+        </rules>
+    </decisions>
+    <decisions>
         <name>Check_Triggered_SObject_Name</name>
         <label>Check Triggered SObject Name</label>
         <locationX>490</locationX>
@@ -490,7 +552,7 @@
         <name>Check_updateParentTask</name>
         <label>Check updateParentTask</label>
         <locationX>490</locationX>
-        <locationY>1382</locationY>
+        <locationY>1790</locationY>
         <defaultConnector>
             <targetReference>Follow_up_required_Or_Not</targetReference>
         </defaultConnector>
@@ -515,7 +577,7 @@
         <name>Follow_up_required_Or_Not</name>
         <label>Follow up required Or Not</label>
         <locationX>490</locationX>
-        <locationY>1682</locationY>
+        <locationY>2090</locationY>
         <defaultConnector>
             <targetReference>NavigateTorecord</targetReference>
         </defaultConnector>
@@ -708,7 +770,7 @@
         <name>Create_Lead_Task</name>
         <label>Create Lead Task</label>
         <locationX>490</locationX>
-        <locationY>1274</locationY>
+        <locationY>1682</locationY>
         <connector>
             <targetReference>Check_updateParentTask</targetReference>
         </connector>
@@ -735,11 +797,39 @@
         <object>Lead</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
+    <recordLookups>
+        <name>Get_Process_path_Task_Details</name>
+        <label>Get Process path Task Details</label>
+        <locationX>490</locationX>
+        <locationY>1274</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_Process_path_Task_Details</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Subject__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>rv_New_Task.Subject</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Task_Record_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>rv_New_Task.Subject</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Process_Path_Task_Detail__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <recordUpdates>
         <name>Update_Parent_Record</name>
         <label>Update Parent Record</label>
         <locationX>358</locationX>
-        <locationY>1490</locationY>
+        <locationY>1898</locationY>
         <connector>
             <targetReference>Follow_up_required_Or_Not</targetReference>
         </connector>

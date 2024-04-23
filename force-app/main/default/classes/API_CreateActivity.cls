@@ -102,6 +102,7 @@ global without sharing class API_CreateActivity{
         List<Task> TaskListwithoutWhoId = new List<Task>();
         List<cls_customer_response> TaskError_status = new List<cls_customer_response>();
         try{
+            Set<string> SubjectString = new Set<string>();
              Set<String> LeadIds = new Set<String>();
              Set<String> OppIds = new Set<String>();
              Set<String> OpportunityIds = new Set<String>();
@@ -112,6 +113,9 @@ global without sharing class API_CreateActivity{
              Map<String, Lead> LeadMapwithId = new Map<String, Lead>();
              Map<String, Opportunity> OppIdwithOppMap = new Map<String, Opportunity>();
              Map<String, lead> LeadMapwithExternalId = new Map<String, lead>();
+             List<Process_Path_Task_Detail__c> pptdetails = new List<Process_Path_Task_Detail__c>();
+             Map<id, Process_Path_Task_Detail__c> pptdmap = new Map<id, Process_Path_Task_Detail__c>();
+             Map<string, Process_Path_Task_Detail__c> PPtdsubjectwithIdMap = new Map<string, Process_Path_Task_Detail__c>();
              //<String, Map<string, Object>> ExternalIDwithActivityObject = new Map<String, Map<string, Object>>();
 
             if (!bodyList.isEmpty() && bodyList.size() > 0) {
@@ -142,7 +146,7 @@ global without sharing class API_CreateActivity{
                 }*/
 
                 if (!OppIds.isEmpty()) {
-                    Opportunitylist = [Select Id, Name, ownerId, owner.name, owner.email From Opportunity where Id IN: OpportunityIds];
+                    Opportunitylist = [Select Id, Name, ownerId, owner.name, owner.email, Process_Attribute__c From Opportunity where Id IN: OpportunityIds];
 
                     System.debug('Leadlist =====> ' + Leadlist);
                     if (!Opportunitylist.isEmpty()) {
@@ -153,6 +157,38 @@ global without sharing class API_CreateActivity{
                 }
                 
             }
+
+            if (!bodyList.isEmpty() && bodyList.size() > 0){
+                for (Object ActivityObj : bodyList){
+                    Map<string, Object> TaskStringmap1 = (Map<string, Object>)ActivityObj;
+                    if (string.valueOf(TaskStringmap1.get('Type')) != null && string.valueOf(TaskStringmap1.get('Type')) != ''){
+                        SubjectString.add(String.valueOf(TaskStringmap1.get('Type')));
+                    }
+
+                }
+                if(SubjectString.size() >0){
+                    pptdmap = new Map<Id, Process_Path_Task_Detail__c>([SELECT Action_Type__c,Action_URL__c,Business_Step_No__c,Child_Task_Category__c,ED_Process_Path_Task_Detail__c,
+                    Execution_Serial_No__c,Id,isActive__c,Manual_API_Call_Out__c,Name,No_Of_Attempts_Allowed__c,Parent_Task_Closure_Dependent__c,
+                    Path_No__c,Process_Path_Child_Path__c,Process_Path__c,Process_Task_Detail__c,SD_Process_Path_Task_Detail__c,SLA__c,
+                    Stage_Name__c,Subject__c,Task_Owner_Name__c,Task_Owner_Type__c,Task_Record_Type__c,To_Be_Merged_With_PPTD__c 
+                    FROM Process_Path_Task_Detail__c
+                     where Subject__c IN: SubjectString]);
+                    pptdetails = [SELECT Action_Type__c,Action_URL__c,Business_Step_No__c,Child_Task_Category__c,ED_Process_Path_Task_Detail__c,
+                                    Execution_Serial_No__c,Id,isActive__c,Manual_API_Call_Out__c,Name,No_Of_Attempts_Allowed__c,Parent_Task_Closure_Dependent__c,
+                                    Path_No__c,Process_Path_Child_Path__c,Process_Path__c,Process_Task_Detail__c,SD_Process_Path_Task_Detail__c,SLA__c,
+                                    Stage_Name__c,Subject__c,Task_Owner_Name__c,Task_Owner_Type__c,Task_Record_Type__c,To_Be_Merged_With_PPTD__c 
+                                    FROM Process_Path_Task_Detail__c
+                                     where Subject__c IN: SubjectString];
+                
+                    if(pptdetails.size()>0){
+                        for (Process_Path_Task_Detail__c pptd : pptdetails) {
+                            PPtdsubjectwithIdMap.put(pptd.Subject__c, pptd);
+                            
+                        }
+                    }
+                }
+            }
+
             Integer i = 1;
             if (!bodyList.isEmpty() && bodyList.size() > 0){
                 for (Object ActivityObj : bodyList){
@@ -162,8 +198,12 @@ global without sharing class API_CreateActivity{
                     
                     task newTask = new task();
                     newTask.DateTime_of_Meeting__c = system.now();
+                    
                     if (string.valueOf(TaskStringmap.get('Subject')) != null && string.valueOf(TaskStringmap.get('Subject')) != ''){
                         newtask.subject = string.valueOf(TaskStringmap.get('Subject'));
+                        if (PPtdsubjectwithIdMap != null && PPtdsubjectwithIdMap.containsKey(string.valueOf(TaskStringmap.get('Subject')))) {
+                            newtask.Process_Path_Task_Detail__c = PPtdsubjectwithIdMap.get(string.valueOf(TaskStringmap.get('Subject'))).Id;
+                        }
                     }
                     if (date.valueOf(String.valueOf(TaskStringmap.get('ActivityDate'))) != null){
                         newtask.ActivityDate = date.valueOf(String.valueOf(TaskStringmap.get('ActivityDate')));
@@ -198,6 +238,7 @@ global without sharing class API_CreateActivity{
                             newtask.WhatId = OppIdwithOppMap.get(string.valueOf(TaskStringmap.get('WhatId'))).id;
                             newtask.Submitted_By__c = OppIdwithOppMap.get(string.valueOf(TaskStringmap.get('WhatId'))).owner.Name;
                             newtask.Submitted_User__c = OppIdwithOppMap.get(string.valueOf(TaskStringmap.get('WhatId'))).ownerId;
+                            newTask.process_attribute__c = OppIdwithOppMap.get(string.valueOf(TaskStringmap.get('WhatId'))).Process_Attribute__c;
                             NewtaskList.add(newTask);
                         }
                     } else{
